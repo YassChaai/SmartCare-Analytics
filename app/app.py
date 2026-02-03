@@ -745,20 +745,30 @@ if page == "Accueil":
     with col2:
         st.subheader("🛏️ Taux d'occupation des lits")
         df['occupation_pct'] = df['taux_occupation_lits'] * 100
-        fig = px.histogram(
-            df,
-            x='occupation_pct',
-            nbins=50,
-            labels={'occupation_pct': 'Taux d\'occupation (%)'},
-            color_discrete_sequence=['#2E3FE8']
-        )
+        # Agrégation mensuelle pour une meilleure lisibilité
+        df_monthly_occupation = df.groupby(df['date'].dt.to_period('M')).agg({
+            'occupation_pct': 'mean'
+        }).reset_index()
+        df_monthly_occupation['date'] = df_monthly_occupation['date'].dt.to_timestamp()
+        
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=df_monthly_occupation['date'],
+            y=df_monthly_occupation['occupation_pct'],
+            name='Taux d\'occupation',
+            line=dict(color='#2E3FE8', width=3),
+            fill='tozeroy',
+            fillcolor='rgba(46, 63, 232, 0.2)'
+        ))
         fig.update_layout(
             height=300,
             margin=dict(l=0, r=0, t=20, b=0),
-            showlegend=False,
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='#e0e0e0')
+            font=dict(color='#e0e0e0'),
+            xaxis_title='Date',
+            yaxis_title='Taux d\'occupation (%)',
+            showlegend=False
         )
         st.plotly_chart(fig, use_container_width=True)
     
