@@ -28,51 +28,54 @@ st.set_page_config(
     initial_sidebar_state="collapsed"  # Sidebar cachée par défaut
 )
 
-# CSS personnalisé - Style Nike : Sobre, Impactant, Minimaliste
+# CSS personnalisé - Style Smart Care Dark
 st.markdown("""
 <style>
-    /* Import de la police Nike-style - Helvetica Neue */
+    /* Import de la police */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
     
-    /* Variables Nike Style */
+    /* Variables Smart Care - Style sobre */
     :root {
-        --nike-black: #111111;
-        --nike-white: #FFFFFF;
-        --nike-orange: #FF5700;
-        --nike-gray: #7E7E7E;
-        --nike-light-gray: #F5F5F5;
-        --nike-dark-gray: #2F2F2F;
-        --nike-gradient: linear-gradient(135deg, #111111 0%, #2F2F2F 100%);
-        --nike-accent: linear-gradient(135deg, #FF5700 0%, #FF8C00 100%);
+        --sc-black: #000000;
+        --sc-dark: #1a1a1a;
+        --sc-card: #2a2a2a;
+        --sc-white: #FFFFFF;
+        --sc-orange: #FF5500;
+        --sc-gray: #999999;
+        --sc-light-gray: #cccccc;
+        --sc-text: #f5f5f5;
     }
     
-    /* Style général - Nike minimaliste */
+    /* Style général - Dark */
     .main {
-        background: #FFFFFF;
+        background: var(--sc-black);
         font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
-        color: #111111;
+        color: var(--sc-light-gray);
     }
     
-    /* Masquer le header Streamlit par défaut */
+    /* Masquer complètement le header Streamlit */
     header[data-testid="stHeader"] {
-        background: transparent;
-        height: 0rem;
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        min-height: 0 !important;
     }
     
     /* Réduire l'espace en haut */
     .block-container {
-        padding-top: 0rem;
         max-width: 100%;
     }
     
-    /* Masquer le menu hamburger */
-    button[kind="header"] {
-        display: none;
+    /* Masquer le menu hamburger et toolbar */
+    button[kind="header"],
+    [data-testid="stToolbar"],
+    [data-testid="stDecoration"] {
+        display: none !important;
     }
     
-    /* Navigation horizontale Nike - FIXE en haut */
+    /* Navigation horizontale - FIXE en haut */
     .navbar-container {
-        background: #111111;
+        background: var(--sc-dark);
         padding: 0;
         margin: 0;
         position: fixed;
@@ -81,12 +84,12 @@ st.markdown("""
         right: 0;
         z-index: 9999;
         border-bottom: 1px solid #2F2F2F;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     }
     
-    /* Ajouter de l'espace en haut du contenu pour compenser la navbar fixe + boutons */
+    /* Ajouter de l'espace en haut du contenu pour compenser la navbar fixe */
     .main .block-container {
-        padding-top: 170px !important;
+        padding-top: 300px !important;
         padding-bottom: 2rem;
     }
     
@@ -102,25 +105,25 @@ st.markdown("""
     .navbar-logo {
         display: flex;
         align-items: center;
-        gap: 15px;
+        gap: 12px;
     }
     
     .navbar-logo h1 {
-        font-size: 2rem;
-        font-weight: 900;
-        color: #FFFFFF;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--sc-white);
         margin: 0;
-        letter-spacing: -0.5px;
+        letter-spacing: 0.5px;
         text-transform: uppercase;
     }
     
     .navbar-subtitle {
         font-size: 0.7rem;
-        color: #7E7E7E;
-        font-weight: 500;
-        letter-spacing: 3px;
+        color: var(--sc-gray);
+        font-weight: 400;
+        letter-spacing: 1px;
         text-transform: uppercase;
-        margin-top: 4px;
+        margin-top: 2px;
     }
     
     .navbar-nav {
@@ -135,48 +138,48 @@ st.markdown("""
     
     .nav-item {
         background: transparent;
-        color: #FFFFFF;
-        padding: 12px 24px;
+        color: var(--sc-gray);
+        padding: 10px 18px;
         border-radius: 0;
         border: none;
-        border-bottom: 3px solid transparent;
-        font-weight: 600;
-        font-size: 0.95rem;
+        border-bottom: 2px solid transparent;
+        font-weight: 500;
+        font-size: 0.85rem;
         transition: all 0.2s ease;
         cursor: pointer;
         white-space: nowrap;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 1px;
     }
     
     .nav-item:hover {
-        border-bottom-color: #FF5700;
-        color: #FF5700;
+        border-bottom-color: var(--sc-orange);
+        color: var(--sc-white);
     }
     
     .nav-item.active {
         background: transparent;
-        color: #FFFFFF;
-        border-bottom-color: #FF5700;
-        font-weight: 700;
+        color: var(--sc-orange);
+        border-bottom-color: var(--sc-orange);
+        font-weight: 600;
     }
     
-    /* Info tooltip Nike */
+    /* Info tooltip */
     .info-tooltip {
         position: relative;
         display: inline-block;
         width: 18px;
         height: 18px;
-        background: #111111;
+        background: var(--sc-card);
         border-radius: 50%;
-        color: white;
+        color: var(--sc-white);
         font-size: 11px;
         font-weight: 700;
         text-align: center;
         line-height: 18px;
         cursor: help;
         margin-left: 8px;
-        border: 1px solid #7E7E7E;
+        border: 1px solid var(--sc-gray);
     }
     
     .info-tooltip:hover::after {
@@ -185,17 +188,17 @@ st.markdown("""
         bottom: 125%;
         left: 50%;
         transform: translateX(-50%);
-        background: #111111;
-        color: #FFFFFF;
+        background: var(--sc-dark);
+        color: var(--sc-white);
         padding: 12px 16px;
         border-radius: 4px;
-        border-left: 3px solid #FF5700;
+        border-left: 3px solid var(--sc-orange);
         white-space: normal;
         width: 280px;
         font-size: 0.85rem;
         font-weight: 400;
         z-index: 1000;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         line-height: 1.5;
     }
     
@@ -206,47 +209,46 @@ st.markdown("""
         left: 50%;
         transform: translateX(-50%);
         border: 6px solid transparent;
-        border-top-color: #111111;
+        border-top-color: var(--sc-dark);
         z-index: 1000;
     }
     
-    /* Description sous graphiques Nike */
+    /* Description sous graphiques */
     .chart-description {
-        background: #F5F5F5;
-        border-left: 3px solid #FF5700;
+        background: var(--sc-card);
+        border-left: 3px solid var(--sc-orange);
         padding: 14px 18px;
-        border-radius: 0;
+        border-radius: 4px;
         margin-top: 12px;
         font-size: 0.9rem;
-        color: #111111;
+        color: var(--sc-light-gray);
         line-height: 1.7;
     }
     
     .chart-description strong {
-        color: #111111;
+        color: var(--sc-white);
         font-weight: 700;
     }
     
-    /* Header principal Nike - Bold & Clean */
+    /* Header principal */
     .main-header {
-        font-size: 3rem;
-        font-weight: 900;
-        color: #111111;
-        margin-bottom: 2rem;
-        letter-spacing: -1px;
-        text-transform: uppercase;
-        border-bottom: 4px solid #FF5700;
-        padding-bottom: 0.5rem;
-        display: inline-block;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--sc-white);
+        margin-bottom: 1rem;
+        letter-spacing: 0.5px;
+        text-transform: none;
+        padding-bottom: 0;
+        display: block;
     }
     
-    /* Carte métrique Nike - Clean & Bold */
+    /* Carte métrique */
     .metric-card {
-        background: #FFFFFF;
+        background: var(--sc-card);
         padding: 2rem;
-        border-radius: 0;
-        border: 1px solid #E5E5E5;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        border-radius: 4px;
+        border: 1px solid #333333;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         transition: all 0.2s ease;
         position: relative;
         overflow: hidden;
@@ -257,9 +259,9 @@ st.markdown("""
         position: absolute;
         top: 0;
         left: 0;
-        width: 4px;
+        width: 3px;
         height: 0%;
-        background: #FF5700;
+        background: var(--sc-orange);
         transition: height 0.3s ease;
     }
     
@@ -268,55 +270,57 @@ st.markdown("""
     }
     
     .metric-card:hover {
-        transform: translateY(-4px);
-        border-color: #111111;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        transform: translateY(-2px);
+        border-color: #444444;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
     }
     
-    /* Alertes Nike - Bold & Minimal */
+    /* Alertes */
     .alert-warning {
-        background: #FFF3E0;
-        border-left: 4px solid #FF5700;
+        background: rgba(255, 85, 0, 0.1);
+        border-left: 3px solid var(--sc-orange);
         padding: 1.2rem;
-        border-radius: 0;
+        border-radius: 2px;
         margin: 1rem 0;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        color: #111111;
-        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        color: var(--sc-text);
+        font-weight: 500;
     }
     
     .alert-danger {
-        background: #FFEBEE;
+        background: rgba(211, 47, 47, 0.1);
         border-left: 4px solid #D32F2F;
         padding: 1.2rem;
-        border-radius: 0;
+        border-radius: 4px;
         margin: 1rem 0;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        color: #D32F2F;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        color: #ff6b6b;
         font-weight: 700;
     }
     
     .alert-success {
-        background: #E8F5E9;
+        background: rgba(56, 142, 60, 0.1);
         border-left: 4px solid #388E3C;
         padding: 1.2rem;
-        border-radius: 0;
+        border-radius: 4px;
         margin: 1rem 0;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        color: #388E3C;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        color: #69db7c;
         font-weight: 600;
     }
     
     /* Cache la sidebar complètement */
     [data-testid="stSidebar"] {
         display: none !important;
+        background: var(--sc-dark);
+        border-right: 1px solid #2a2f3e;
     }
     
-    /* Métriques Streamlit Nike */
+    /* Métriques Streamlit */
     [data-testid="stMetricValue"] {
         font-size: 2.5rem;
         font-weight: 900;
-        color: #111111;
+        color: var(--sc-white);
     }
     
     [data-testid="stMetricDelta"] {
@@ -329,56 +333,46 @@ st.markdown("""
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 1px;
-        color: #7E7E7E;
+        color: var(--sc-gray);
     }
     
-    /* Sidebar Nike */
-    [data-testid="stSidebar"] {
-        background: #111111;
-        border-right: 1px solid #2F2F2F;
-    }
-    
-    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {
-        color: #FFFFFF;
-    }
-    
-    /* Boutons Nike - Just Do It */
+    /* Boutons */
     .stButton>button {
-        background: #111111;
-        color: #FFFFFF;
-        border: none;
-        border-radius: 0;
-        padding: 0.85rem 1.5rem;
-        font-weight: 700;
-        font-size: 0.9rem;
+        background: var(--sc-card);
+        color: var(--sc-white);
+        border: 1px solid #333333;
+        border-radius: 2px;
+        padding: 0.8rem 1.5rem;
+        font-weight: 600;
+        font-size: 0.85rem;
         transition: all 0.2s ease;
         text-transform: uppercase;
-        letter-spacing: 1.5px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        letter-spacing: 1px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         width: 100%;
     }
     
     .stButton>button:hover {
-        background: #FF5700;
-        color: #FFFFFF;
-        transform: translateY(-3px);
-        box-shadow: 0 4px 16px rgba(255, 87, 0, 0.3);
+        background: var(--sc-orange);
+        color: var(--sc-white);
+        border-color: var(--sc-orange);
+        box-shadow: 0 2px 12px rgba(255, 85, 0, 0.3);
     }
     
     /* Bouton actif (primary) */
     .stButton>button[kind="primary"],
     .stButton>button[data-baseweb="button"][kind="primary"] {
-        background: #FF5700 !important;
-        color: #FFFFFF !important;
-        border-bottom: 4px solid #111111;
+        background: var(--sc-orange) !important;
+        color: var(--sc-white) !important;
+        border: 1px solid var(--sc-orange);
     }
     
-    /* Tabs Nike */
+    /* Tabs */
     .stTabs [data-baseweb="tab-list"] {
         gap: 0;
         background: transparent;
         padding: 0;
-        border-bottom: 2px solid #E5E5E5;
+        border-bottom: 2px solid #2a2f3e;
     }
     
     .stTabs [data-baseweb="tab"] {
@@ -386,7 +380,7 @@ st.markdown("""
         border: none;
         border-bottom: 3px solid transparent;
         border-radius: 0;
-        color: #7E7E7E;
+        color: var(--sc-gray);
         font-weight: 600;
         padding: 12px 24px;
         transition: all 0.2s ease;
@@ -395,81 +389,94 @@ st.markdown("""
     }
     
     .stTabs [data-baseweb="tab"]:hover {
-        color: #111111;
-        border-bottom-color: #FF5700;
+        color: var(--sc-white);
+        border-bottom-color: var(--sc-orange);
     }
     
     .stTabs [aria-selected="true"] {
         background: transparent;
-        color: #111111;
-        border-bottom-color: #FF5700;
+        color: var(--sc-white);
+        border-bottom-color: var(--sc-orange);
         font-weight: 700;
     }
     
-    /* Sliders Nike */
+    /* Sliders */
     .stSlider [data-baseweb="slider"] {
-        background: #FF5700;
+        background: transparent;
     }
     
     .stSlider [role="slider"] {
-        background: #111111;
+        background: var(--sc-orange) !important;
+        border: 2px solid var(--sc-orange) !important;
+        box-shadow: 0 0 8px rgba(255, 85, 0, 0.6);
+    }
+    
+    .stSlider [data-baseweb="slider-track"] {
+        background: #444444 !important;
+    }
+    
+    .stSlider input[type="range"]::-webkit-slider-thumb {
+        background: var(--sc-orange);
+        border: 2px solid var(--sc-white);
+        box-shadow: 0 0 8px rgba(255, 85, 0, 0.6);
+    }
+    
+    .stSlider input[type="range"]::-moz-range-thumb {
+        background: var(--sc-orange);
+        border: 2px solid var(--sc-white);
+        box-shadow: 0 0 8px rgba(255, 85, 0, 0.6);
     }
     
     /* Expander */
     .streamlit-expanderHeader {
-        background: linear-gradient(135deg, rgba(46, 63, 232, 0.1) 0%, rgba(26, 35, 126, 0.1) 100%);
-        border: 1px solid rgba(46, 63, 232, 0.3);
-        border-radius: 10px;
+        background: var(--sc-card);
+        border: 1px solid #2a2f3e;
+        border-radius: 4px;
         font-weight: 600;
-        color: #FFD700;
+        color: var(--sc-white);
     }
     
     /* Headers */
     h1, h2, h3 {
-        color: #FFD700;
+        color: var(--sc-white);
         font-weight: 600;
-        letter-spacing: 0px;
+        letter-spacing: 0.5px;
     }
     
     h2 {
         font-size: 1.5rem;
+        color: var(--sc-white);
     }
     
     h3 {
         font-size: 1.2rem;
         font-weight: 500;
+        color: var(--sc-light-gray);
     }
     
     /* Texte général */
     p, label, span {
-        color: #e0e0e0;
+        color: var(--sc-light-gray);
     }
     
     /* Dataframe style */
     .dataframe {
-        border: 1px solid rgba(46, 63, 232, 0.3);
-        border-radius: 10px;
+        background: var(--sc-card);
+        border: 1px solid #2a2f3e;
+        border-radius: 4px;
         overflow: hidden;
+        color: var(--sc-white);
     }
     
-    /* Logo/Badge effet */
-    .kc-badge {
-        display: inline-block;
-        background: linear-gradient(135deg, #2E3FE8 0%, #FFD700 100%);
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-weight: 700;
-        color: white;
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        letter-spacing: 1px;
-        box-shadow: 0 4px 15px rgba(46, 63, 232, 0.4);
-        animation: float 3s ease-in-out infinite;
-    }
-    
-    @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-5px); }
+    /* Input fields */
+    .stTextInput>div>div>input,
+    .stSelectbox>div>div>div,
+    .stDateInput>div>div>input,
+    .stNumberInput>div>div>input {
+        background: var(--sc-card);
+        color: var(--sc-white);
+        border: 1px solid #2a2f3e;
+        border-radius: 4px;
     }
     
     /* Scroll bar custom */
@@ -479,16 +486,16 @@ st.markdown("""
     }
     
     ::-webkit-scrollbar-track {
-        background: rgba(10, 14, 39, 0.5);
+        background: var(--sc-dark);
     }
     
     ::-webkit-scrollbar-thumb {
-        background: linear-gradient(135deg, #2E3FE8 0%, #FFD700 100%);
+        background: var(--sc-orange);
         border-radius: 5px;
     }
     
     ::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(135deg, #FFD700 0%, #2E3FE8 100%);
+        background: var(--sc-gold);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -633,32 +640,14 @@ nav_html = f"""
 """
 st.markdown(nav_html, unsafe_allow_html=True)
 
-st.markdown("---")
-
 page = st.session_state.active_page
 
 # ========================================
 # PAGE : ACCUEIL
 # ========================================
 if page == "Accueil":
-    st.markdown("""
-        <div style="text-align: center; padding: 20px 0;">
-            <h1 style="
-                font-size: 2.5rem;
-                font-weight: 700;
-                background: linear-gradient(135deg, #2E3FE8 0%, #FFD700 100%);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                margin: 0;
-            ">Tableau de Bord</h1>
-            <p style="
-                color: #b0b0b0;
-                font-size: 1rem;
-                font-weight: 400;
-                margin-top: 10px;
-            ">Vue d'ensemble des indicateurs clés et alertes en temps réel</p>
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">Tableau de Bord</h1>', unsafe_allow_html=True)
+    st.markdown('<p style="color: var(--sc-gray); text-align: left; margin-bottom: 2rem;">Vue d\'ensemble des indicateurs clés et alertes en temps réel</p>', unsafe_allow_html=True)
     
     st.markdown("---")
     
