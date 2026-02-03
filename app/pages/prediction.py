@@ -2,12 +2,14 @@
 Page de prédiction avec modèle ML
 """
 
+import json
 import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime, timedelta
+from pathlib import Path
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import LabelEncoder
 
@@ -21,6 +23,23 @@ except Exception:
     prepare_prediction_row = None
     apply_overrides = None
     predict_from_features = None
+
+
+def _load_metrics_json():
+    """Charge les métriques du modèle depuis ML/artifacts/metrics.json."""
+    try:
+        base = Path(__file__).resolve().parent.parent.parent
+        path = base / "ML" / "artifacts" / "metrics.json"
+        if path.exists():
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            print(f"[Prédiction] Métriques chargées depuis {path} ({len(data)} modèles/baselines)")
+            return data
+        print(f"[Prédiction] Fichier metrics.json non trouvé: {path}")
+    except Exception as e:
+        print(f"[Prédiction] Erreur chargement metrics.json: {e}")
+    return None
+
 
 def show(df, model, model_available):
     """Affiche la page de prédiction"""
@@ -51,6 +70,24 @@ def show(df, model, model_available):
             st.info("📁 Placez `ml/artifacts/gradient_boosting.joblib` + `feature_columns.json` + `data/raw/` dans le projet")
     
     st.markdown("---")
+    
+    # Métriques du modèle et limites (MAE / MAPE + disclaimer)
+    metrics_data = _load_metrics_json()
+    model_name = "gradient_boosting"
+    if metrics_data and model_name in metrics_data:
+        with st.expander("📊 Performance du modèle et limites", expanded=False):
+            m = metrics_data[model_name]
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("MAE (test)", f"{m.get('mae', 0):.1f}")
+            with col2:
+                st.metric("MAPE (test)", f"{m.get('mape', 0):.1f} %")
+            with col3:
+                st.metric("SMAPE (test)", f"{m.get('smape', 0):.1f} %")
+            st.caption(
+                "Modèle entraîné sur 2022–2024. Pour les dates hors période, la prédiction s'appuie sur la "
+                "dernière période connue + contexte météo/événement."
+            )
     
     # Onglets
     tab1, tab2, tab3 = st.tabs([
@@ -409,46 +446,106 @@ def show(df, model, model_available):
         
         if st.button("🚀 Générer les Prédictions", type="primary", use_container_width=True):
             
+            log_lines = []
+            def _log(msg):
+                log_lines.append(msg)
+                print(f"[Prédiction Multi-jours] {msg}")
+            
             with st.spinner(f"Calcul des prédictions pour {n_days} jours..."):
                 
-                # Générer les prédictions jour par jour
                 predictions = []
                 dates = pd.date_range(start=start_date, periods=n_days, freq='D')
+                urg_ratio = df["nombre_passages_urgences"].mean() / max(df["nombre_admissions"].mean(), 1)
+                mean_occupation = df["taux_occupation_lits"].mean()
                 
-                for date in dates:
-                    day_name = date.strftime('%A')
-                    day_fr = {
-                        'Monday': 'Lundi', 'Tuesday': 'Mardi', 'Wednesday': 'Mercredi',
-                        'Thursday': 'Jeudi', 'Friday': 'Vendredi', 'Saturday': 'Samedi', 
-                        'Sunday': 'Dimanche'
-                    }.get(day_name, day_name)
-                    
-                    month = date.month
-                    if month in [12, 1, 2]:
-                        saison = "Hiver"
-                    elif month in [3, 4, 5]:
-                        saison = "Printemps"
-                    elif month in [6, 7, 8]:
-                        saison = "Été"
-                    else:
-                        saison = "Automne"
-                    
-                    # Prédiction simple (à améliorer avec le modèle ML)
-                    pred_adm, pred_urg, pred_occ = predict_with_stats(
-                        df, day_fr, saison, False, 15.0, 'Aucun'
-                    )
-                    
-                    predictions.append({
-                        'date': date,
-                        'admissions': pred_adm,
-                        'urgences': pred_urg,
-                        'occupation': pred_occ * 100
-                    })
+                _log(f"Plage: {start_date} → {n_days} jours | pipeline_ready = {pipeline_ready}")
+                
+                if pipeline_ready:
+                    # Utiliser le modèle ML : dernière ligne de features + overrides météo selon le mois (variation)
+                    try:
+                        _log("Chargement base_row (dernière période connue)...")
+                        base_row = prepare_prediction_row(
+                            model["feature_df"],
+                            model["feature_cols"],
+                            target_date=None,
+                        )
+                        _log(f"base_row chargé (shape {base_row.shape})")
+                        for i, date in enumerate(dates):
+                            month = date.month
+                            meteo_override = (
+                                "Froid" if month in [12, 1, 2] else
+                                "Canicule" if month in [6, 7, 8] else
+                                None
+                            )
+                            row = apply_overrides(
+                                base_row.copy(),
+                                model["feature_cols"],
+                                meteo=meteo_override,
+                                event=None,
+                            )
+                            result = predict_from_features(
+                                row,
+                                model["model"],
+                                model["feature_cols"],
+                                safety_margin=0.10,
+                            )
+                            pred_adm = result["prediction"]
+                            pred_urg = pred_adm * urg_ratio
+                            predictions.append({
+                                "date": date,
+                                "admissions": pred_adm,
+                                "urgences": pred_urg,
+                                "occupation": mean_occupation * 100,
+                            })
+                        _log(f"ML OK: {len(predictions)} prédictions (modèle SmartCare + overrides météo par mois)")
+                        st.info("🤖 Prédictions obtenues avec le modèle ML SmartCare (contexte météo par mois).")
+                    except Exception as e:
+                        _log(f"ERREUR ML: {e} → passage au modèle statistique")
+                        import traceback
+                        traceback.print_exc()
+                        st.warning(f"Modèle ML indisponible pour cette plage : {e}. Passage au modèle statistique.")
+                        predictions = []
+                
+                if not predictions:
+                    # Fallback : modèle statistique
+                    _log("Utilisation du modèle statistique (predict_with_stats)")
+                    for date in dates:
+                        day_name = date.strftime('%A')
+                        day_fr = {
+                            'Monday': 'Lundi', 'Tuesday': 'Mardi', 'Wednesday': 'Mercredi',
+                            'Thursday': 'Jeudi', 'Friday': 'Vendredi', 'Saturday': 'Samedi',
+                            'Sunday': 'Dimanche'
+                        }.get(day_name, day_name)
+                        month = date.month
+                        if month in [12, 1, 2]:
+                            saison = "Hiver"
+                        elif month in [3, 4, 5]:
+                            saison = "Printemps"
+                        elif month in [6, 7, 8]:
+                            saison = "Été"
+                        else:
+                            saison = "Automne"
+                        pred_adm, pred_urg, pred_occ = predict_with_stats(
+                            df, day_fr, saison, False, 15.0, 'Aucun'
+                        )
+                        predictions.append({
+                            'date': date,
+                            'admissions': pred_adm,
+                            'urgences': pred_urg,
+                            'occupation': pred_occ * 100
+                        })
+                    _log(f"Statistique OK: {len(predictions)} prédictions (predict_with_stats)")
                 
                 pred_df = pd.DataFrame(predictions)
                 
                 # Affichage
                 st.success(f"✅ {n_days} jours prédits")
+                
+                # Logs (terminal + interface)
+                if log_lines:
+                    with st.expander("🔍 Logs de la prédiction (terminal + détail)", expanded=True):
+                        st.text("\n".join(log_lines))
+                        st.caption("Les mêmes messages s'affichent dans le terminal Streamlit.")
                 
                 st.markdown("---")
                 
