@@ -493,6 +493,8 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+pd.options.mode.string_storage = "python"
+
 # Chargement des données
 @st.cache_data
 def load_data():
@@ -507,8 +509,8 @@ def load_data():
     # Nettoyage des colonnes
     df.columns = df.columns.str.strip()
     for col in df.columns:
-        if df[col].dtype == 'object':
-            df[col] = df[col].str.strip()
+        if pd.api.types.is_string_dtype(df[col]):
+            df[col] = df[col].astype("string[python]").str.strip()
     
     # Conversion des types
     df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
@@ -861,10 +863,11 @@ elif page == "Analyse":
     else:
         df_filtered = df.copy()
     
+    saison_options = sorted(df["saison"].dropna().unique().tolist())
     saison_filter = st.sidebar.multiselect(
         "Saison",
-        options=df['saison'].unique(),
-        default=df['saison'].unique()
+        options=saison_options,
+        default=saison_options,
     )
     
     if saison_filter:
@@ -896,7 +899,7 @@ elif page == "Analyse":
         if granularity == 'Hebdomadaire':
             df_agg = df_filtered.set_index('date').resample('W')[metric].mean().reset_index()
         elif granularity == 'Mensuel':
-            df_agg = df_filtered.set_index('date').resample('M')[metric].mean().reset_index()
+            df_agg = df_filtered.set_index('date').resample('ME')[metric].mean().reset_index()
         else:
             df_agg = df_filtered[['date', metric]].copy()
         
@@ -997,7 +1000,9 @@ elif page == "Analyse":
         df_corr = pd.DataFrame(corr_pairs)
         df_corr = df_corr.sort_values('Corrélation', key=abs, ascending=False).head(10)
         
-        st.dataframe(df_corr, use_container_width=True, hide_index=True)
+        df_corr_display = df_corr.copy()
+        df_corr_display.index = df_corr_display.index.astype("string[python]")
+        st.dataframe(df_corr_display, use_container_width=True)
     
     with tab3:
         st.subheader("Impact de la météo sur l'activité hospitalière")
@@ -1050,6 +1055,7 @@ elif page == "Analyse":
         
         stats_df = df_filtered[cols_to_describe].describe().T
         stats_df['cv'] = (stats_df['std'] / stats_df['mean'] * 100).round(2)
+        stats_df.index = stats_df.index.astype("string[python]")
         
         st.dataframe(
             stats_df.style.format("{:.2f}"),
