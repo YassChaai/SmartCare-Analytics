@@ -63,7 +63,6 @@ st.markdown("""
     
     /* Réduire l'espace en haut */
     .block-container {
-        padding-top: 0rem !important;
         max-width: 100%;
     }
     
@@ -90,7 +89,7 @@ st.markdown("""
     
     /* Ajouter de l'espace en haut du contenu pour compenser la navbar fixe */
     .main .block-container {
-        padding-top: 90px !important;
+        padding-top: 300px !important;
         padding-bottom: 2rem;
     }
     
