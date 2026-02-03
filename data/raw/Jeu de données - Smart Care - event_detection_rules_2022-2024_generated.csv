@@ -1,0 +1,10 @@
+evenement_type,condition_temperature,condition_duree,condition_meteo,priorite_evenement,evenement_declenche
+Epidemie_grippe,saison=Hiver,>=14 jours,any,9,TRUE
+Vague_froid,temp_min <= 0,>=2 jours,Gris,6,TRUE
+Canicule,temp_max >= 25,>=1 jour,Soleil,10,FALSE
+Epidemie_grippe,saison=Hiver,>=14 jours,any,9,TRUE
+Vague_froid,temp_min <= 0,>=2 jours,Gris,6,TRUE
+Canicule,temp_max >= 25,>=1 jour,Soleil,10,FALSE
+Epidemie_grippe,saison=Hiver,>=14 jours,any,9,TRUE
+Vague_froid,temp_min <= 0,>=2 jours,Gris,6,TRUE
+Canicule,temp_max >= 25,>=1 jour,Soleil,10,FALSE

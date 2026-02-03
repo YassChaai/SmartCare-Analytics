@@ -1,0 +1,7 @@
+parametre,valeur,description
+annee_simulee,2022,année simulée
+hospital_reference,HOP_0001,hôpital de référence
+seed_random,42,reproductibilité
+mode_generation,realiste,génération réaliste
+taux_bruit_admissions,0.20,variance journalière
+zone_vacances,Zone C,Paris

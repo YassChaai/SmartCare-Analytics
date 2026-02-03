@@ -1,0 +1,2 @@
+hospital_id,hospital_nom,ville,region,type_hopital,lits_total_mco,lits_urgences,lits_reanimation,lits_ssr,nb_medecins_reference,nb_infirmiers_reference,nb_aides_soignants_reference,admissions_moyennes_jour,passages_urgences_moyens_jour,duree_sejour_moyenne
+HOP_0001,Pitié-Salpêtrière,Paris,Île-de-France,CUH,1650,80,55,120,70,260,210,360,920,"5,2"
