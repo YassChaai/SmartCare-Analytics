@@ -309,6 +309,11 @@ st.markdown("""
         color: #388E3C;
         font-weight: 600;
     }
+
+    .alert-success h2,
+    .alert-success h2 * {
+        color: #111111 !important;
+    }
     
     /* Cache la sidebar complètement */
     [data-testid="stSidebar"] {
