@@ -1,0 +1,7 @@
+type_personnel,periode,borne_min,borne_max,probabilite
+medecin,mois=01,55,65,"0,8"
+medecin,mois=01,50,54,"0,1"
+medecin,mois=01,66,70,"0,1"
+infirmier,mois=01,215,245,"0,8"
+infirmier,mois=01,200,214,"0,1"
+infirmier,mois=01,246,270,"0,1"

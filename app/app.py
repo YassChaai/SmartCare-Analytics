@@ -527,8 +527,13 @@ pd.options.mode.string_storage = "python"
 def load_data():
     """Charge les données hospitalières"""
     base_path = Path(__file__).parent.parent
-    df = pd.read_csv(
+    candidates = [
+        base_path / "data" / "raw" / "Jeu de données - Smart Care - daily_hospital_context_2022-2026_generated.csv",
         base_path / "data" / "raw" / "Jeu de données - Smart Care - daily_hospital_context_2022-2024_generated.csv",
+    ]
+    data_path = next((p for p in candidates if p.exists()), candidates[-1])
+    df = pd.read_csv(
+        data_path,
         decimal=',',
         skipinitialspace=True  # Ignore les espaces après les virgules
     )
@@ -743,7 +748,8 @@ if page == "Accueil":
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("📈 Évolution des admissions (2022-2024)")
+        data_years = f"{df['date'].min().year}–{df['date'].max().year}"
+        st.subheader(f"📈 Évolution des admissions ({data_years})")
         df_monthly = df.groupby(df['date'].dt.to_period('M')).agg({
             'nombre_admissions': 'sum',
             'nombre_passages_urgences': 'sum'
@@ -840,7 +846,7 @@ if page == "Accueil":
             """, unsafe_allow_html=True)
     
     with col2:
-        events = last_week[last_week['evenement_special'] != ''].copy()
+        events = last_week[~last_week['evenement_special'].isin(['', 'Aucun'])].copy()
         if not events.empty:
             event_types = events['evenement_special'].value_counts()
             st.markdown(f"""
