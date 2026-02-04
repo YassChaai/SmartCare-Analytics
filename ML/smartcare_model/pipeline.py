@@ -15,6 +15,11 @@ from smartcare_model.inference.predict import (
     predict_from_features,
     prepare_prediction_row,
 )
+from smartcare_model.inference.similarity import (
+    calculate_historical_trend,
+    compute_synthetic_lags,
+    find_similar_days,
+)
 from smartcare_model.training.trainer import train_models
 
 BASE_DIR = ML_ROOT
@@ -28,6 +33,9 @@ __all__ = [
     "TARGET_COL",
     "apply_overrides",
     "build_feature_dataframe",
+    "calculate_historical_trend",
+    "compute_synthetic_lags",
+    "find_similar_days",
     "load_artifacts",
     "load_feature_columns",
     "load_raw_dataframe",

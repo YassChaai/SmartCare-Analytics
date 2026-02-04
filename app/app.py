@@ -566,13 +566,19 @@ def load_ml_model():
             raw_df = load_raw_dataframe()
             feature_df = build_feature_dataframe(raw_df)
             model, feature_cols = load_artifacts()
+            
+            print(f"[DEBUG] Modèle chargé: type={type(model)}, feature_cols={len(feature_cols)} features")
+            
             return {
                 "model": model,
                 "feature_cols": feature_cols,
                 "feature_df": feature_df,
                 "source": "smartcare_model",
             }, True
-        except Exception:
+        except Exception as e:
+            print(f"[DEBUG] Erreur chargement SmartCare model: {e}")
+            import traceback
+            traceback.print_exc()
             pass
 
         # Tentative 2 : fichiers .joblib directs
