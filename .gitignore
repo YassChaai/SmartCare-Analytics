@@ -11,3 +11,5 @@ wheels/
 
 # macOS metadata
 .DS_Store
+
+.early.coverage

@@ -742,7 +742,7 @@ if page == "Accueil":
                 borderwidth=1
             )
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
     
     with col2:
         st.subheader("🛏️ Taux d'occupation des lits")
@@ -772,7 +772,7 @@ if page == "Accueil":
             yaxis_title='Taux d\'occupation (%)',
             showlegend=False
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
     
     # Alertes et événements avec style moderne
     st.markdown("---")
@@ -917,7 +917,7 @@ elif page == "Analyse":
                      annotation_text=f"Moyenne: {avg_value:.2f}")
         
         fig.update_layout(height=400)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         
         # Analyse par jour de semaine
         col1, col2 = st.columns(2)
@@ -938,7 +938,7 @@ elif page == "Analyse":
                 color_continuous_scale='Blues'
             )
             fig.update_layout(height=300, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         
         with col2:
             st.markdown("#### 🌤️ Variation par saison")
@@ -952,7 +952,7 @@ elif page == "Analyse":
                 color_continuous_scale='Oranges'
             )
             fig.update_layout(height=300, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
     
     with tab2:
         st.subheader("Matrice de corrélation")
@@ -983,7 +983,7 @@ elif page == "Analyse":
             xaxis={'side': 'bottom'}
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         
         # Top corrélations
         st.markdown("#### 🔗 Top 10 des corrélations")
@@ -1002,7 +1002,7 @@ elif page == "Analyse":
         
         df_corr_display = df_corr.copy()
         df_corr_display.index = df_corr_display.index.astype("string[python]")
-        st.dataframe(df_corr_display, use_container_width=True)
+        st.dataframe(df_corr_display, width="stretch")
     
     with tab3:
         st.subheader("Impact de la météo sur l'activité hospitalière")
@@ -1022,7 +1022,7 @@ elif page == "Analyse":
                 }
             )
             fig.update_layout(height=350)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         
         with col2:
             st.markdown("#### ❄️ Conditions météo et urgences")
@@ -1039,7 +1039,7 @@ elif page == "Analyse":
                 labels={'value': 'Nombre moyen', 'variable': 'Type'}
             )
             fig.update_layout(height=350)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
     
     with tab4:
         st.subheader("Statistiques descriptives")
@@ -1059,7 +1059,7 @@ elif page == "Analyse":
         
         st.dataframe(
             stats_df.style.format("{:.2f}"),
-            use_container_width=True
+            width="stretch"
         )
         
         st.markdown("---")
@@ -1083,7 +1083,7 @@ elif page == "Analyse":
                 marginal='box'
             )
             fig.update_layout(height=350)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         
         with col2:
             fig = px.box(
@@ -1094,7 +1094,7 @@ elif page == "Analyse":
                 color='saison'
             )
             fig.update_layout(height=350)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
 # ========================================
 # ========================================

@@ -240,7 +240,7 @@ def show(df):
     # Bouton de simulation
     st.markdown("---")
     
-    if st.button("🚀 Lancer la Simulation", type="primary", use_container_width=True):
+    if st.button("🚀 Lancer la Simulation", type="primary", width="stretch"):
         
         with st.spinner("Simulation en cours..."):
             # Calcul baseline (moyenne des derniers 30 jours dans les données)
@@ -349,7 +349,7 @@ def show(df):
                     height=300,
                     margin=dict(l=0, r=0, t=40, b=0)
                 )
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width="stretch")
             
             with col2:
                 fig = go.Figure()
@@ -371,7 +371,7 @@ def show(df):
                     height=300,
                     margin=dict(l=0, r=0, t=40, b=0)
                 )
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width="stretch")
             
             # Graphique occupation et personnel
             col1, col2 = st.columns(2)
@@ -398,7 +398,7 @@ def show(df):
                     height=300,
                     margin=dict(l=0, r=0, t=40, b=0)
                 )
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width="stretch")
             
             with col2:
                 fig = go.Figure()
@@ -422,7 +422,7 @@ def show(df):
                     height=300,
                     margin=dict(l=0, r=0, t=40, b=0)
                 )
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width="stretch")
             
             # Analyse des risques
             st.markdown("---")
