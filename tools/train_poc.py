@@ -1,4 +1,4 @@
-from smartcare_model.pipeline import train_models
+from ml.smartcare_model.pipeline import train_models
 
 
 def main():
