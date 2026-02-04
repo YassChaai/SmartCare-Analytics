@@ -30,13 +30,111 @@
     "smape": 17.99590815342543
   },
   "prophet": {
-    "mae": 68.18802823662513,
-    "mape": 19.230592062198696,
-    "smape": 17.13948986722876
+    "mae": 64.5782430699789,
+    "mape": 17.69990784982353,
+    "smape": 16.300984174570097
   },
   "prophet_params": {
-    "seasonality_mode": "multiplicative",
-    "changepoint_prior_scale": 0.1,
+    "seasonality_mode": "additive",
+    "changepoint_prior_scale": 0.2,
     "seasonality_prior_scale": 10.0
-  }
+  },
+  "prophet_tuning": [
+    {
+      "params": {
+        "seasonality_mode": "additive",
+        "changepoint_prior_scale": 0.05,
+        "seasonality_prior_scale": 5.0
+      },
+      "metrics": {
+        "mae": 65.22251995899863,
+        "mape": 18.13850290526838,
+        "smape": 16.4626684240482
+      }
+    },
+    {
+      "params": {
+        "seasonality_mode": "additive",
+        "changepoint_prior_scale": 0.1,
+        "seasonality_prior_scale": 10.0
+      },
+      "metrics": {
+        "mae": 65.43375982530053,
+        "mape": 18.139537817246744,
+        "smape": 16.495381663307743
+      }
+    },
+    {
+      "params": {
+        "seasonality_mode": "additive",
+        "changepoint_prior_scale": 0.2,
+        "seasonality_prior_scale": 10.0
+      },
+      "metrics": {
+        "mae": 64.5782430699789,
+        "mape": 17.69990784982353,
+        "smape": 16.300984174570097
+      }
+    },
+    {
+      "params": {
+        "seasonality_mode": "multiplicative",
+        "changepoint_prior_scale": 0.05,
+        "seasonality_prior_scale": 5.0
+      },
+      "metrics": {
+        "mae": 67.7861553799252,
+        "mape": 19.076865659687602,
+        "smape": 17.05632875776527
+      }
+    },
+    {
+      "params": {
+        "seasonality_mode": "multiplicative",
+        "changepoint_prior_scale": 0.1,
+        "seasonality_prior_scale": 10.0
+      },
+      "metrics": {
+        "mae": 68.18802823662513,
+        "mape": 19.230592062198696,
+        "smape": 17.13948986722876
+      }
+    },
+    {
+      "params": {
+        "seasonality_mode": "multiplicative",
+        "changepoint_prior_scale": 0.2,
+        "seasonality_prior_scale": 10.0
+      },
+      "metrics": {
+        "mae": 65.45193278760813,
+        "mape": 18.0620705062106,
+        "smape": 16.49842389476392
+      }
+    },
+    {
+      "params": {
+        "seasonality_mode": "multiplicative",
+        "changepoint_prior_scale": 0.3,
+        "seasonality_prior_scale": 15.0
+      },
+      "metrics": {
+        "mae": 66.66180302431475,
+        "mape": 18.72631075181149,
+        "smape": 16.863887267990957
+      }
+    },
+    {
+      "params": {
+        "seasonality_mode": "multiplicative",
+        "changepoint_prior_scale": 0.5,
+        "seasonality_prior_scale": 20.0
+      },
+      "metrics": {
+        "mae": 67.02717710997169,
+        "mape": 18.788162346910326,
+        "smape": 16.91171333544485
+      }
+    }
+  ]
 }
