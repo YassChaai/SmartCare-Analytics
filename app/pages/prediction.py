@@ -18,11 +18,20 @@ try:
         prepare_prediction_row,
         apply_overrides,
         predict_from_features,
+        find_similar_days,
+        compute_synthetic_lags,
+        calculate_historical_trend,
     )
-except Exception:
+except Exception as e:
+    print(f"[ERREUR] Import smartcare_model échoué: {e}")
+    import traceback
+    traceback.print_exc()
     prepare_prediction_row = None
     apply_overrides = None
     predict_from_features = None
+    find_similar_days = None
+    compute_synthetic_lags = None
+    calculate_historical_trend = None
 
 
 def _load_metrics_json():
@@ -49,10 +58,26 @@ def show(df, model, model_available):
         and isinstance(model, dict)
         and "feature_cols" in model
         and "feature_df" in model
+        and "model" in model
         and prepare_prediction_row is not None
         and apply_overrides is not None
         and predict_from_features is not None
     )
+    
+    # Debug pour comprendre pourquoi pipeline_ready est False
+    if model_available and not pipeline_ready:
+        st.warning(f"""
+        🔍 Debug pipeline_ready:
+        - model_available: {model_available}
+        - isinstance(model, dict): {isinstance(model, dict)}
+        - "feature_cols" in model: {"feature_cols" in model if isinstance(model, dict) else "N/A"}
+        - "feature_df" in model: {"feature_df" in model if isinstance(model, dict) else "N/A"}
+        - "model" in model: {"model" in model if isinstance(model, dict) else "N/A"}
+        - prepare_prediction_row: {prepare_prediction_row is not None}
+        - apply_overrides: {apply_overrides is not None}
+        - predict_from_features: {predict_from_features is not None}
+        """)
+    
     
     st.markdown('<p class="main-header">Prédiction des Besoins Hospitaliers</p>', unsafe_allow_html=True)
     
@@ -183,35 +208,121 @@ def show(df, model, model_available):
         
         st.markdown("---")
         
-        if st.button("🚀 Calculer la Prédiction", type="primary", width="stretch"):
+        # Facteur de tendance temporelle (pour dates hors historique)
+        if pipeline_ready and calculate_historical_trend is not None:
+            st.markdown("### 🔮 Ajustement Tendance Temporelle")
+            
+            # Calculer la tendance historique
+            trend_data = calculate_historical_trend(model["feature_df"])
+            
+            col1, col2 = st.columns([2, 1])
+            
+            with col1:
+                st.info(f"📊 **Tendance historique détectée** : {trend_data['facteur_2026_pct']:+.1f}%")
+                st.caption(f"Basée sur l'évolution 2022 ({trend_data['adm_moyenne_start']:.0f} adm/j) → 2024 ({trend_data['adm_moyenne_end']:.0f} adm/j)")
+            
+            with col2:
+                utiliser_auto = st.checkbox("Utiliser tendance auto", value=True, key="use_auto_trend")
+            
+            if not utiliser_auto:
+                facteur_tendance = st.slider(
+                    "Facteur personnalisé (%)",
+                    min_value=-30.0,
+                    max_value=50.0,
+                    value=trend_data['facteur_2026_pct'],
+                    step=1.0,
+                    help="Ajustez selon vos anticipations : évolution démographique, capacité, etc.",
+                    key="custom_trend"
+                )
+            else:
+                facteur_tendance = trend_data['facteur_2026_pct']
+            
+            # Détail du calcul (expander optionnel)
+            with st.expander("📖 Comment est calculée la tendance ?"):
+                st.write(f"- **Admissions moyennes 2022** : {trend_data['adm_moyenne_start']:.0f} par jour")
+                st.write(f"- **Admissions moyennes 2024** : {trend_data['adm_moyenne_end']:.0f} par jour")
+                st.write(f"- **Croissance annuelle** : {trend_data['tendance_annuelle_pct']:.2f}%")
+                st.write(f"- **Extrapolation vers 2026** (2 ans) : {trend_data['facteur_2026_pct']:+.1f}%")
+                st.caption("La tendance est appliquée après la prédiction du modèle ML pour tenir compte de l'évolution temporelle.")
+        else:
+            facteur_tendance = 0.0
+        
+        st.markdown("---")
+        
+        if st.button("🚀 Calculer la Prédiction", type="primary", use_container_width=True):
             
             with st.spinner("Calcul en cours..."):
                 
                 if pipeline_ready:
-                    st.info("🤖 Utilisation du modèle ML SmartCare")
                     try:
                         meteo_override = None if meteo == "Aucun" else meteo
                         event_override = None if evenement == "Aucun" else evenement
-
-                        try:
-                            row = prepare_prediction_row(
+                        
+                        # Vérifier si la date est hors historique (> 30 jours après dernière date)
+                        last_date = model["feature_df"]["date"].max()
+                        days_diff = (pd.to_datetime(pred_date) - last_date).days
+                        use_knn = days_diff > 30 and find_similar_days is not None
+                        
+                        if use_knn:
+                            st.info("🔍 Mode k-NN : Recherche de jours similaires dans l'historique")
+                            
+                            # Préparer les features contextuelles
+                            target_features = {
+                                "temperature": temperature,
+                                "meteo": meteo_override if meteo_override else "Soleil",
+                                "evenement": event_override if event_override else "Aucun",
+                                "vacances": 1 if vacances else 0,
+                            }
+                            
+                            # Trouver les jours similaires
+                            similar_days = find_similar_days(
                                 model["feature_df"],
-                                model["feature_cols"],
-                                target_date=pred_date
+                                pd.to_datetime(pred_date),
+                                target_features,
+                                k=10
                             )
-                        except Exception:
+                            
+                            st.success(f"✓ {len(similar_days)} jours similaires trouvés (distance moyenne : {similar_days['similarity_distance'].mean():.2f})")
+                            
+                            # Calculer les lags synthétiques
+                            synthetic_lags = compute_synthetic_lags(similar_days)
+                            
+                            # Créer une ligne de prédiction avec lags synthétiques
                             row = prepare_prediction_row(
                                 model["feature_df"],
                                 model["feature_cols"],
                                 target_date=None
                             )
-                            st.info("ℹ️ Date hors historique ML : utilisation de la dernière date disponible")
+                            
+                            # Remplacer les lags par les valeurs synthétiques
+                            for lag_col, lag_val in synthetic_lags.items():
+                                if lag_col in row.columns:
+                                    row[lag_col] = lag_val
+                        else:
+                            st.info("🤖 Mode ML classique : Date dans l'historique")
+                            try:
+                                row = prepare_prediction_row(
+                                    model["feature_df"],
+                                    model["feature_cols"],
+                                    target_date=pred_date
+                                )
+                            except Exception:
+                                row = prepare_prediction_row(
+                                    model["feature_df"],
+                                    model["feature_cols"],
+                                    target_date=None
+                                )
+                                st.warning("⚠️ Date exacte non trouvée, utilisation de la dernière date disponible")
+                        
+                        # Appliquer les overrides météo/événement
                         row = apply_overrides(
                             row,
                             model["feature_cols"],
                             meteo=meteo_override,
                             event=event_override
                         )
+                        
+                        # Prédiction
                         result = predict_from_features(
                             row,
                             model["model"],
@@ -219,10 +330,17 @@ def show(df, model, model_available):
                             safety_margin=0.10
                         )
 
-                        pred_admissions = result["prediction"]
+                        # Appliquer le facteur de tendance
+                        pred_admissions_brut = result["prediction"]
+                        pred_admissions = pred_admissions_brut * (1 + facteur_tendance / 100)
+                        
                         urg_ratio = df["nombre_passages_urgences"].mean() / df["nombre_admissions"].mean()
                         pred_urgences = pred_admissions * urg_ratio
                         pred_occupation = df["taux_occupation_lits"].mean()
+                        
+                        # Afficher info sur le facteur appliqué
+                        if abs(facteur_tendance) > 0.1:
+                            st.info(f"📈 Facteur de tendance appliqué : {facteur_tendance:+.1f}% → Prédiction ajustée de {pred_admissions_brut:.0f} à {pred_admissions:.0f} admissions")
 
                     except Exception as e:
                         st.error(f"Erreur avec le modèle ML : {e}")
@@ -232,14 +350,17 @@ def show(df, model, model_available):
                             saison, vacances, temperature, evenement
                         )
                 elif model_available and model is not None:
-                    # Utiliser un modèle ML simple si fourni
-                    st.info("🤖 Utilisation du modèle ML")
+                    # Utiliser un modèle ML simple si fourni (cas où pipeline_ready=False)
+                    st.info("🤖 Utilisation du modèle ML simple")
                     try:
+                        # Vérifier si c'est un dict (format SmartCare) ou un modèle direct
+                        actual_model = model["model"] if isinstance(model, dict) and "model" in model else model
+                        
                         features = prepare_features_for_model(
                             pred_date, day_of_week, saison, vacances,
                             temperature, meteo, evenement
                         )
-                        predictions = model.predict([features])
+                        predictions = actual_model.predict([features])
                         pred_admissions = predictions[0]
                         pred_urgences = predictions[1] if len(predictions) > 1 else predictions[0] * 3.5
                         pred_occupation = predictions[2] if len(predictions) > 2 else 0.75
