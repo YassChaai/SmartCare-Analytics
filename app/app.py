@@ -44,6 +44,9 @@ st.markdown("""
         --nike-dark-gray: #2F2F2F;
         --nike-gradient: linear-gradient(135deg, #111111 0%, #2F2F2F 100%);
         --nike-accent: linear-gradient(135deg, #FF5700 0%, #FF8C00 100%);
+        --slider-accent: #2E3FE8;
+        --slider-accent-strong: #3B82F6;
+        --slider-thumb: #FFFFFF;
     }
     
     /* Style général - Nike minimaliste */
@@ -408,11 +411,30 @@ st.markdown("""
     
     /* Sliders Nike */
     .stSlider [data-baseweb="slider"] {
-        background: #FF5700;
+        background: transparent;
+        padding: 0;
+        margin: 6px 0;
+    }
+
+    .stSlider [data-baseweb="slider"] > div {
+        background: transparent;
+        border-radius: 6px;
+        height: 6px;
+    }
+
+    .stSlider [data-baseweb="slider"] > div > div {
+        background: var(--slider-accent);
+        border-radius: 6px;
     }
     
     .stSlider [role="slider"] {
-        background: #111111;
+        background: var(--slider-thumb);
+        border: 2px solid var(--slider-accent);
+        box-shadow: 0 2px 6px rgba(46, 63, 232, 0.35);
+        border-radius: 8px;
+        width: 18px;
+        height: 18px;
+        box-sizing: border-box;
     }
     
     /* Expander */
