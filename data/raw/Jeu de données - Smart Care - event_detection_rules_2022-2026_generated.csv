@@ -1,0 +1,56 @@
+evenement_type,condition_temperature,condition_duree,condition_meteo,priorite_evenement,evenement_declenche
+Epidemie_grippe,saison=Hiver,>=14 jours,any,9,TRUE
+Vague_froid,temp_min <= 0,>=2 jours,Gris,6,TRUE
+Canicule,temp_max >= 25,>=1 jour,Soleil,10,FALSE
+Tension_hiver_2022,date_range=2022-01-10..2022-03-15,fixed,any,8,TRUE
+Plan_blanc_covid_leve_2022,date_range=2022-03-15..2022-03-31,fixed,any,4,TRUE
+Canicule_IDF_2022,date_range=2022-07-18..2022-07-19,fixed,Soleil,10,TRUE
+Triple_epidemie_hiver_2022,date_range=2022-11-15..2023-01-31,fixed,any,9,TRUE
+Coupe_monde_rugby_2023,date_range=2023-09-08..2023-10-28,fixed,any,6,TRUE
+JO_Paris_2024,date_range=2024-07-26..2024-08-11,fixed,any,7,TRUE
+Plan_blanc_hiver_2024_2025,date_range=2024-12-15..2025-02-15,fixed,any,9,TRUE
+Tension_ete_2025,date_range=2025-07-01..2025-08-31,fixed,any,5,TRUE
+Epidemie_grippe,saison=Hiver,>=14 jours,any,9,TRUE
+Vague_froid,temp_min <= 0,>=2 jours,Gris,6,TRUE
+Canicule,temp_max >= 25,>=1 jour,Soleil,10,FALSE
+Tension_hiver_2022,date_range=2022-01-10..2022-03-15,fixed,any,8,TRUE
+Plan_blanc_covid_leve_2022,date_range=2022-03-15..2022-03-31,fixed,any,4,TRUE
+Canicule_IDF_2022,date_range=2022-07-18..2022-07-19,fixed,Soleil,10,TRUE
+Triple_epidemie_hiver_2022,date_range=2022-11-15..2023-01-31,fixed,any,9,TRUE
+Coupe_monde_rugby_2023,date_range=2023-09-08..2023-10-28,fixed,any,6,TRUE
+JO_Paris_2024,date_range=2024-07-26..2024-08-11,fixed,any,7,TRUE
+Plan_blanc_hiver_2024_2025,date_range=2024-12-15..2025-02-15,fixed,any,9,TRUE
+Tension_ete_2025,date_range=2025-07-01..2025-08-31,fixed,any,5,TRUE
+Epidemie_grippe,saison=Hiver,>=14 jours,any,9,TRUE
+Vague_froid,temp_min <= 0,>=2 jours,Gris,6,TRUE
+Canicule,temp_max >= 25,>=1 jour,Soleil,10,FALSE
+Tension_hiver_2022,date_range=2022-01-10..2022-03-15,fixed,any,8,TRUE
+Plan_blanc_covid_leve_2022,date_range=2022-03-15..2022-03-31,fixed,any,4,TRUE
+Canicule_IDF_2022,date_range=2022-07-18..2022-07-19,fixed,Soleil,10,TRUE
+Triple_epidemie_hiver_2022,date_range=2022-11-15..2023-01-31,fixed,any,9,TRUE
+Coupe_monde_rugby_2023,date_range=2023-09-08..2023-10-28,fixed,any,6,TRUE
+JO_Paris_2024,date_range=2024-07-26..2024-08-11,fixed,any,7,TRUE
+Plan_blanc_hiver_2024_2025,date_range=2024-12-15..2025-02-15,fixed,any,9,TRUE
+Tension_ete_2025,date_range=2025-07-01..2025-08-31,fixed,any,5,TRUE
+Epidemie_grippe,saison=Hiver,>=14 jours,any,9,TRUE
+Vague_froid,temp_min <= 0,>=2 jours,Gris,6,TRUE
+Canicule,temp_max >= 25,>=1 jour,Soleil,10,FALSE
+Tension_hiver_2022,date_range=2022-01-10..2022-03-15,fixed,any,8,TRUE
+Plan_blanc_covid_leve_2022,date_range=2022-03-15..2022-03-31,fixed,any,4,TRUE
+Canicule_IDF_2022,date_range=2022-07-18..2022-07-19,fixed,Soleil,10,TRUE
+Triple_epidemie_hiver_2022,date_range=2022-11-15..2023-01-31,fixed,any,9,TRUE
+Coupe_monde_rugby_2023,date_range=2023-09-08..2023-10-28,fixed,any,6,TRUE
+JO_Paris_2024,date_range=2024-07-26..2024-08-11,fixed,any,7,TRUE
+Plan_blanc_hiver_2024_2025,date_range=2024-12-15..2025-02-15,fixed,any,9,TRUE
+Tension_ete_2025,date_range=2025-07-01..2025-08-31,fixed,any,5,TRUE
+Epidemie_grippe,saison=Hiver,>=14 jours,any,9,TRUE
+Vague_froid,temp_min <= 0,>=2 jours,Gris,6,TRUE
+Canicule,temp_max >= 25,>=1 jour,Soleil,10,FALSE
+Tension_hiver_2022,date_range=2022-01-10..2022-03-15,fixed,any,8,TRUE
+Plan_blanc_covid_leve_2022,date_range=2022-03-15..2022-03-31,fixed,any,4,TRUE
+Canicule_IDF_2022,date_range=2022-07-18..2022-07-19,fixed,Soleil,10,TRUE
+Triple_epidemie_hiver_2022,date_range=2022-11-15..2023-01-31,fixed,any,9,TRUE
+Coupe_monde_rugby_2023,date_range=2023-09-08..2023-10-28,fixed,any,6,TRUE
+JO_Paris_2024,date_range=2024-07-26..2024-08-11,fixed,any,7,TRUE
+Plan_blanc_hiver_2024_2025,date_range=2024-12-15..2025-02-15,fixed,any,9,TRUE
+Tension_ete_2025,date_range=2025-07-01..2025-08-31,fixed,any,5,TRUE

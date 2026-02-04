@@ -25,6 +25,7 @@ try:
         build_prophet_future_frame,
         load_prophet_artifacts,
         forecast_prophet,
+        evaluate_knn_quality,
     )
 except Exception as e:
     print(f"[ERREUR] Import smartcare_model échoué: {e}")
@@ -40,6 +41,7 @@ except Exception as e:
     build_prophet_future_frame = None
     load_prophet_artifacts = None
     forecast_prophet = None
+    evaluate_knn_quality = None
 
 
 def _load_metrics_json():
@@ -225,8 +227,23 @@ def show(df, model, model_available):
             else:
                 evenement = st.selectbox(
                     "Événement spécial",
-                    ['Aucun', 'Épidémie grippe', 'Épidémie gastro', 'Covid-19', 
-                     'Canicule', 'Grand froid', 'Pic pollution']
+                    [
+                        'Aucun',
+                        'Épidémie grippe',
+                        'Épidémie gastro',
+                        'Covid-19',
+                        'Canicule',
+                        'Grand froid',
+                        'Pic pollution',
+                        'Accident majeur',
+                        'Grève du personnel',
+                        'Tension hivernale',
+                        'Plan blanc',
+                        'Triple épidémie hivernale',
+                        'Coupe du monde rugby 2023',
+                        'JO Paris 2024',
+                        'Tension été 2025'
+                    ]
                 )
         
         st.markdown("---")
@@ -335,25 +352,9 @@ def show(df, model, model_available):
                     try:
                         meteo_override = None if meteo == "Aucun" else meteo
                         event_override = None if evenement == "Aucun" else evenement
-
-                        selected_model = model["model"]
-                        selected_feature_cols = model["feature_cols"]
-                        if (
-                            load_artifacts is not None
-                            and selected_model_key in ("gradient_boosting", "random_forest")
-                            and selected_model_key != "gradient_boosting"
-                        ):
-                            try:
-                                selected_model, selected_feature_cols = load_artifacts(
-                                    model_name=selected_model_key
-                                )
-                            except Exception as e:
-                                st.warning(f"Modèle {selected_model_key} indisponible, fallback gradient_boosting: {e}")
                         
-                        # Vérifier si la date est hors historique (> 30 jours après dernière date)
-                        last_date = model["feature_df"]["date"].max()
-                        days_diff = (pd.to_datetime(pred_date) - last_date).days
-                        use_knn = days_diff > 30 and find_similar_days is not None
+                        # Utiliser k-NN pour une journée spécifique (si disponible)
+                        use_knn = find_similar_days is not None
                         
                         if use_knn:
                             st.info("🔍 Mode k-NN : Recherche de jours similaires dans l'historique")
@@ -374,7 +375,39 @@ def show(df, model, model_available):
                                 k=10
                             )
                             
-                            st.success(f"✓ {len(similar_days)} jours similaires trouvés (distance moyenne : {similar_days['similarity_distance'].mean():.2f})")
+                            # Évaluer et afficher les métriques k-NN
+                            if evaluate_knn_quality is not None:
+                                knn_metrics = evaluate_knn_quality(similar_days)
+                                
+                                st.success(f"✓ {knn_metrics['n_jours']} jours similaires trouvés")
+                                
+                                # Afficher les métriques dans un expander
+                                with st.expander("📊 Métriques de qualité k-NN", expanded=True):
+                                    col1, col2, col3 = st.columns(3)
+                                    
+                                    with col1:
+                                        st.metric("Distance moyenne", f"{knn_metrics['distance_moyenne']:.2f}")
+                                        st.caption(f"Min: {knn_metrics['distance_min']:.2f} | Max: {knn_metrics['distance_max']:.2f}")
+                                    
+                                    with col2:
+                                        if "adm_moyenne" in knn_metrics:
+                                            st.metric("Admissions moyennes", f"{knn_metrics['adm_moyenne']:.0f}")
+                                            st.caption(f"Écart-type: {knn_metrics['adm_std']:.1f}")
+                                    
+                                    with col3:
+                                        if "adm_min" in knn_metrics and "adm_max" in knn_metrics:
+                                            st.metric("Fourchette admissions", f"{knn_metrics['adm_min']:.0f} - {knn_metrics['adm_max']:.0f}")
+                                    
+                                    # Top 3 jours les plus similaires
+                                    if "top_3_dates" in knn_metrics:
+                                        st.markdown("**🎯 Top 3 jours les plus similaires :**")
+                                        for i, date in enumerate(knn_metrics["top_3_dates"][:3], 1):
+                                            adm = ""
+                                            if "top_3_admissions" in knn_metrics and i-1 < len(knn_metrics["top_3_admissions"]):
+                                                adm = f" → {knn_metrics['top_3_admissions'][i-1]:.0f} admissions"
+                                            st.caption(f"{i}. {date.strftime('%d/%m/%Y')}{adm}")
+                            else:
+                                st.success(f"✓ {len(similar_days)} jours similaires trouvés (distance moyenne : {similar_days['similarity_distance'].mean():.2f})")
                             
                             # Calculer les lags synthétiques
                             synthetic_lags = compute_synthetic_lags(similar_days)
@@ -391,7 +424,7 @@ def show(df, model, model_available):
                                 if lag_col in row.columns:
                                     row[lag_col] = lag_val
                         else:
-                            st.info("🤖 Mode ML classique : Date dans l'historique")
+                            st.info("🤖 Mode ML classique : k-NN indisponible")
                             try:
                                 row = prepare_prediction_row(
                                     model["feature_df"],
@@ -726,6 +759,30 @@ def show(df, model, model_available):
                             target_date=None,
                         )
                         _log(f"base_row chargé (shape {base_row.shape})")
+
+                        last_date = model["feature_df"]["date"].max()
+                        temp_mean_by_month = df.groupby(df["date"].dt.month)["temperature_moyenne"].mean().to_dict()
+                        temp_min_by_month = df.groupby(df["date"].dt.month)["temperature_min"].mean().to_dict()
+                        temp_max_by_month = df.groupby(df["date"].dt.month)["temperature_max"].mean().to_dict()
+                        overall_temp = df["temperature_moyenne"].mean()
+
+                        jour_map = {
+                            "Lundi": 1.10,
+                            "Mardi": 1.05,
+                            "Mercredi": 1.00,
+                            "Jeudi": 1.00,
+                            "Vendredi": 0.95,
+                            "Samedi": 0.85,
+                            "Dimanche": 0.80,
+                        }
+                        saison_map = {
+                            "Hiver": 1.15,
+                            "Printemps": 1.00,
+                            "Été": 0.90,
+                            "Ete": 0.90,
+                            "Automne": 1.05,
+                        }
+
                         for i, date in enumerate(dates):
                             month = date.month
                             meteo_override = (
@@ -733,12 +790,87 @@ def show(df, model, model_available):
                                 "Canicule" if month in [6, 7, 8] else
                                 None
                             )
+
+                            target_date = pd.to_datetime(date)
+                            if target_date <= last_date:
+                                row = prepare_prediction_row(
+                                    model["feature_df"],
+                                    model["feature_cols"],
+                                    target_date=target_date,
+                                )
+                            else:
+                                vacances = 1 if month in [7, 8] else 0
+                                target_features = {
+                                    "temperature": temp_mean_by_month.get(month, overall_temp),
+                                    "meteo": meteo_override if meteo_override else "Aucun",
+                                    "evenement": "Aucun",
+                                    "vacances": vacances,
+                                }
+
+                                if find_similar_days is not None:
+                                    similar_days = find_similar_days(
+                                        model["feature_df"],
+                                        target_date,
+                                        target_features,
+                                        k=10,
+                                    )
+                                    row = base_row.copy()
+                                    if compute_synthetic_lags is not None:
+                                        synthetic_lags = compute_synthetic_lags(similar_days)
+                                        for lag_col, lag_val in synthetic_lags.items():
+                                            if lag_col in row.columns:
+                                                row[lag_col] = lag_val
+                                else:
+                                    row = base_row.copy()
+
+                                jour_fr = {
+                                    0: "Lundi",
+                                    1: "Mardi",
+                                    2: "Mercredi",
+                                    3: "Jeudi",
+                                    4: "Vendredi",
+                                    5: "Samedi",
+                                    6: "Dimanche",
+                                }[target_date.weekday()]
+                                if month in [12, 1, 2]:
+                                    saison = "Hiver"
+                                elif month in [3, 4, 5]:
+                                    saison = "Printemps"
+                                elif month in [6, 7, 8]:
+                                    saison = "Été"
+                                else:
+                                    saison = "Automne"
+
+                                if "date" in row.columns:
+                                    row["date"] = target_date
+                                if "temperature_moyenne" in row.columns:
+                                    row["temperature_moyenne"] = temp_mean_by_month.get(month, overall_temp)
+                                if "temperature_min" in row.columns:
+                                    row["temperature_min"] = temp_min_by_month.get(month, overall_temp - 5)
+                                if "temperature_max" in row.columns:
+                                    row["temperature_max"] = temp_max_by_month.get(month, overall_temp + 5)
+                                if "is_weekend" in row.columns:
+                                    row["is_weekend"] = 1 if target_date.weekday() >= 5 else 0
+                                if "is_holiday" in row.columns:
+                                    row["is_holiday"] = vacances
+                                if "veille_holiday" in row.columns:
+                                    row["veille_holiday"] = 0
+                                if "lendemain_holiday" in row.columns:
+                                    row["lendemain_holiday"] = 0
+                                if "mult_jour_semaine" in row.columns:
+                                    row["mult_jour_semaine"] = jour_map.get(jour_fr, 1.0)
+                                if "mult_saison" in row.columns:
+                                    row["mult_saison"] = saison_map.get(saison, 1.0)
+                                if "mult_vacances" in row.columns:
+                                    row["mult_vacances"] = 0.90 if vacances else 1.00
+
                             row = apply_overrides(
                                 base_row.copy(),
                                 selected_feature_cols,
                                 meteo=meteo_override,
                                 event=None,
                             )
+
                             result = predict_from_features(
                                 row,
                                 selected_model,
@@ -753,8 +885,8 @@ def show(df, model, model_available):
                                 "urgences": pred_urg,
                                 "occupation": mean_occupation * 100,
                             })
-                        _log(f"ML OK: {len(predictions)} prédictions (modèle SmartCare + overrides météo par mois)")
-                        st.info("🤖 Prédictions obtenues avec le modèle ML SmartCare (contexte météo par mois).")
+                        _log(f"ML OK: {len(predictions)} prédictions (features datées + k-NN si hors historique)")
+                        st.info("🤖 Prédictions ML : features datées quand disponibles, sinon k-NN pour synthétiser les lags.")
                     except Exception as e:
                         _log(f"ERREUR ML: {e} → passage au modèle statistique")
                         import traceback
@@ -1059,6 +1191,22 @@ def predict_with_stats(df, jour_semaine, saison, vacances, temperature, evenemen
             base_urgences *= 1.25
         elif 'pollution' in evenement:
             base_urgences *= 1.15
+        elif 'Accident' in evenement or 'Afflux' in evenement:
+            base_admissions *= 1.55
+            base_urgences *= 1.90
+            base_occupation *= 1.20
+        elif 'Grève' in evenement or 'Greve' in evenement:
+            base_admissions *= 0.90
+            base_urgences *= 1.10
+            base_occupation *= 1.05
+        elif 'JO' in evenement or 'Coupe du monde' in evenement:
+            base_admissions *= 1.15
+            base_urgences *= 1.25
+            base_occupation *= 1.10
+        elif 'Tension' in evenement or 'Plan blanc' in evenement or 'Triple' in evenement:
+            base_admissions *= 1.25
+            base_urgences *= 1.35
+            base_occupation *= 1.20
     
     # Ajouter variabilité réaliste
     base_admissions *= np.random.normal(1.0, 0.05)

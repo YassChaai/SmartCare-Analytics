@@ -18,6 +18,7 @@ from smartcare_model.inference.predict import (
 from smartcare_model.inference.similarity import (
     calculate_historical_trend,
     compute_synthetic_lags,
+    evaluate_knn_quality,
     find_similar_days,
 )
 from smartcare_model.prophet import (
@@ -44,6 +45,7 @@ __all__ = [
     "build_feature_dataframe",
     "calculate_historical_trend",
     "compute_synthetic_lags",
+    "evaluate_knn_quality",
     "find_similar_days",
     "forecast_prophet",
     "load_artifacts",
