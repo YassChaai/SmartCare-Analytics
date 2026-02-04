@@ -1,6 +1,6 @@
 """Constantes partagees pour l'entrainement et l'inference."""
 
-DATA_FILENAME_HINT = "daily_hospital_context_2022-2024_generated.csv"
+DATA_FILENAME_HINT = "daily_hospital_context_2022-2026_generated.csv"
 DEFAULT_MODEL_NAME = "gradient_boosting"
 TARGET_COL = "y"
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script de génération de données Smart Care pour 2022-2024
+Script de génération de données Smart Care pour 2022-2026
 Respecte la documentation et les règles du projet Smart Care
 """
 
@@ -23,8 +23,55 @@ class SmartCareDataGenerator:
         self.staff_variation = None
         self.weather_ref = None
         self.luxembourg_weather = None
+
+        # États pour la variabilité temporelle
+        self._prev_admissions = None
+        self._prev_urgences = None
+        self._daily_shock_adm = 1.0
+        self._daily_shock_urg = 1.0
         
         self.load_reference_data()
+
+    def _get_param_float(self, name, default):
+        """Récupère un paramètre numérique avec valeur par défaut."""
+        value = self.get_parameter(name)
+        if value is None:
+            return default
+        try:
+            return self.normalize_number(value)
+        except Exception:
+            return default
+
+    def _year_trend_factor(self, date, base_year=2022):
+        """Applique une tendance annuelle douce (par défaut +2%/an)."""
+        annual_trend = self._get_param_float('tendance_annuelle_admissions', 0.02)
+        years_diff = date.year - base_year
+        return (1 + annual_trend) ** max(0, years_diff)
+
+    def _seasonality_factor(self, date):
+        """Saisonnalité infra-annuelle (sinusoïde) + légère variation mensuelle."""
+        amplitude = self._get_param_float('amplitude_saisonnalite', 0.08)
+        day_of_year = date.timetuple().tm_yday
+        seasonal = 1 + amplitude * np.sin(2 * np.pi * (day_of_year / 365.0))
+
+        month_factors = {
+            1: 1.05, 2: 1.06, 3: 1.02, 4: 0.98, 5: 0.97, 6: 0.98,
+            7: 0.95, 8: 0.94, 9: 1.00, 10: 1.02, 11: 1.03, 12: 1.06
+        }
+        monthly = month_factors.get(date.month, 1.0)
+        return seasonal * monthly
+
+    def _temperature_factor(self, temperature_moyenne):
+        """Impact météo sur admissions/urgences (extrêmes = hausse)."""
+        if temperature_moyenne <= -2:
+            return 1.12
+        if temperature_moyenne <= 2:
+            return 1.06
+        if temperature_moyenne >= 32:
+            return 1.15
+        if temperature_moyenne >= 27:
+            return 1.08
+        return 1.0
         
     def load_reference_data(self):
         """Charge tous les fichiers de référence"""
@@ -55,6 +102,113 @@ class SmartCareDataGenerator:
         self.special_events = pd.read_csv(
             os.path.join(self.base_path, 'Jeu de données - Smart Care - special_event_reference.csv')
         )
+
+        # Compléter avec des événements manquants (impacts par défaut)
+        default_special_events = [
+            {
+                'evenement_type': 'Canicule',
+                'date_debut': '2022-01-01',
+                'date_fin': '2026-12-31',
+                'condition_declenchement': 'temp_max > 30 sur plusieurs jours',
+                'impact_admissions_min': 0.08,
+                'impact_admissions_max': 0.20
+            },
+            {
+                'evenement_type': 'Tension_hiver_2022',
+                'date_debut': '2022-01-10',
+                'date_fin': '2022-03-15',
+                'condition_declenchement': 'tension hivernale + sortie progressive Covid',
+                'impact_admissions_min': 0.05,
+                'impact_admissions_max': 0.12
+            },
+            {
+                'evenement_type': 'Plan_blanc_covid_leve_2022',
+                'date_debut': '2022-03-15',
+                'date_fin': '2022-03-31',
+                'condition_declenchement': 'levée plan blanc Covid AP-HP',
+                'impact_admissions_min': -0.03,
+                'impact_admissions_max': 0.0
+            },
+            {
+                'evenement_type': 'Canicule_IDF_2022',
+                'date_debut': '2022-07-18',
+                'date_fin': '2022-07-19',
+                'condition_declenchement': 'vigilance orange canicule IDF',
+                'impact_admissions_min': 0.12,
+                'impact_admissions_max': 0.25
+            },
+            {
+                'evenement_type': 'Triple_epidemie_hiver_2022',
+                'date_debut': '2022-11-15',
+                'date_fin': '2023-01-31',
+                'condition_declenchement': 'grippe + bronchiolite + Covid',
+                'impact_admissions_min': 0.15,
+                'impact_admissions_max': 0.35
+            },
+            {
+                'evenement_type': 'Coupe_monde_rugby_2023',
+                'date_debut': '2023-09-08',
+                'date_fin': '2023-10-28',
+                'condition_declenchement': 'mass gathering (Stade de France/Paris)',
+                'impact_admissions_min': 0.03,
+                'impact_admissions_max': 0.08
+            },
+            {
+                'evenement_type': 'JO_Paris_2024',
+                'date_debut': '2024-07-26',
+                'date_fin': '2024-08-11',
+                'condition_declenchement': 'jeux olympiques Paris',
+                'impact_admissions_min': 0.04,
+                'impact_admissions_max': 0.10
+            },
+            {
+                'evenement_type': 'Plan_blanc_hiver_2024_2025',
+                'date_debut': '2024-12-15',
+                'date_fin': '2025-02-15',
+                'condition_declenchement': 'tension hivernale grippe',
+                'impact_admissions_min': 0.10,
+                'impact_admissions_max': 0.25
+            },
+            {
+                'evenement_type': 'Tension_ete_2025',
+                'date_debut': '2025-07-01',
+                'date_fin': '2025-08-31',
+                'condition_declenchement': 'organisation accès aux soins été',
+                'impact_admissions_min': 0.02,
+                'impact_admissions_max': 0.06
+            },
+            {
+                'evenement_type': 'Accident_majeur',
+                'date_debut': '2022-01-01',
+                'date_fin': '2026-12-31',
+                'condition_declenchement': 'incident majeur imprévisible',
+                'impact_admissions_min': 0.10,
+                'impact_admissions_max': 0.30
+            },
+            {
+                'evenement_type': 'Greve_personnel',
+                'date_debut': '2022-01-01',
+                'date_fin': '2026-12-31',
+                'condition_declenchement': 'mouvement social',
+                'impact_admissions_min': -0.08,
+                'impact_admissions_max': 0.05
+            },
+            {
+                'evenement_type': 'Pic_pollution',
+                'date_debut': '2022-01-01',
+                'date_fin': '2026-12-31',
+                'condition_declenchement': 'pollution atmosphérique',
+                'impact_admissions_min': 0.03,
+                'impact_admissions_max': 0.10
+            },
+        ]
+        existing = set(self.special_events['evenement_type'].astype(str).tolist())
+        missing_rows = [row for row in default_special_events if row['evenement_type'] not in existing]
+        if missing_rows:
+            self.special_events = pd.concat(
+                [self.special_events, pd.DataFrame(missing_rows)],
+                ignore_index=True
+            )
         
         # Charger les variations de personnel
         self.staff_variation = pd.read_csv(
@@ -218,6 +372,20 @@ class SmartCareDataGenerator:
         }
         
         ref_value = self.normalize_number(reference.get(personnel_type, 0))
+
+        # Tendance annuelle (baisse légère possible) + saisonnalité
+        staff_trend = self._get_param_float('tendance_annuelle_staff', -0.05)
+        years_diff = date.year - 2022
+        ref_value *= (1 + staff_trend) ** max(0, years_diff)
+
+        staff_season_amp = self._get_param_float('amplitude_saisonnalite_staff', 0.03)
+        day_of_year = date.timetuple().tm_yday
+        ref_value *= (1 + staff_season_amp * np.sin(2 * np.pi * (day_of_year / 365.0)))
+
+        # Vacances scolaires (baisse plus marquée sur certains métiers)
+        if self.is_school_holiday(date):
+            vacation_factor = self._get_param_float('facteur_vacances_staff', 0.92)
+            ref_value *= vacation_factor
         
         # Appliquer les variations mensuelles
         month = date.month
@@ -239,25 +407,40 @@ class SmartCareDataGenerator:
                     max_val = self.normalize_number(rule['borne_max'])
                     prob = rule['probabilite_num']
                     weighted_value += np.random.uniform(min_val, max_val) * (prob / total_prob)
-                return int(weighted_value)
-        
-        return int(ref_value)
+                base_staff = weighted_value
+                # Ajouter du bruit journalier contrôlé
+                noise_rate = self._get_param_float('taux_bruit_staff', 0.06)
+                noise = np.random.normal(0, base_staff * noise_rate)
+                return max(0, int(base_staff + noise))
+
+        # Si pas de règle trouvée, utiliser la valeur de référence ajustée + bruit
+        noise_rate = self._get_param_float('taux_bruit_staff', 0.06)
+        noise = np.random.normal(0, ref_value * noise_rate)
+        return max(0, int(ref_value + noise))
     
     def calculate_admissions(self, date, hospital_info, events, weather):
         """Calcule le nombre d'admissions"""
         # Baseline
         base_admissions = self.normalize_number(hospital_info['admissions_moyennes_jour'])
+
+        # Tendance annuelle + saisonnalité
+        base_admissions *= self._year_trend_factor(date) * self._seasonality_factor(date)
         
         # Variance journalière
         noise_rate = self.normalize_number(self.get_parameter('taux_bruit_admissions'))
         noise = np.random.normal(0, base_admissions * noise_rate)
         
-        # Jour de semaine (baisse le weekend)
-        day_of_week = date.weekday()
-        if day_of_week >= 5:  # weekend
-            weekend_factor = 0.85
-        else:
-            weekend_factor = 1.0
+        # Jour de semaine (profil plus réaliste)
+        weekday_factors = {
+            0: 1.05,  # Lundi
+            1: 1.02,
+            2: 1.00,
+            3: 1.00,
+            4: 0.98,
+            5: 0.88,  # Samedi
+            6: 0.85,  # Dimanche
+        }
+        weekend_factor = weekday_factors.get(date.weekday(), 1.0)
         
         # Impact des événements
         event_impact = 0
@@ -271,22 +454,33 @@ class SmartCareDataGenerator:
         
         # Vacances scolaires - baisse des admissions
         vacation_factor = 0.92 if self.is_school_holiday(date) else 1.0
-        
-        admissions = int(base_admissions * weekend_factor * vacation_factor * (1 + event_impact) + noise)
+
+        # Température (impact extrêmes)
+        temp_factor = self._temperature_factor(weather['temperature_moyenne'])
+
+        # Choc rare (afflux massif / incident)
+        shock_factor = self._daily_shock_adm
+
+        expected = base_admissions * weekend_factor * vacation_factor * temp_factor * (1 + event_impact) * shock_factor
+
+        # Autocorrélation (inertie jour à jour)
+        ar_weight = self._get_param_float('poids_autocorrelation_admissions', 0.25)
+        if self._prev_admissions is not None:
+            expected = (1 - ar_weight) * expected + ar_weight * self._prev_admissions
+
+        admissions = int(expected + noise)
+        self._prev_admissions = admissions
         return max(admissions, 100)
     
     def calculate_urgences_passages(self, date, hospital_info, weather):
         """Calcule le nombre de passages aux urgences"""
         base_urgences = self.normalize_number(hospital_info['passages_urgences_moyens_jour'])
+
+        # Tendance annuelle + saisonnalité
+        base_urgences *= self._year_trend_factor(date) * self._seasonality_factor(date)
         
         # Variation météo
-        temp = weather['temperature_moyenne']
-        if temp < -5 or temp > 30:
-            weather_factor = 1.20
-        elif temp < 0 or temp > 25:
-            weather_factor = 1.10
-        else:
-            weather_factor = 1.0
+        weather_factor = self._temperature_factor(weather['temperature_moyenne'])
         
         # Jour de semaine
         day_of_week = date.weekday()
@@ -302,7 +496,18 @@ class SmartCareDataGenerator:
         # Vacances scolaires - impact sur urgences
         vacation_factor = 1.05 if self.is_school_holiday(date) else 1.0
         
-        urgences = int(base_urgences * weather_factor * daily_factor * vacation_factor)
+        # Choc rare (afflux massif / incident)
+        shock_factor = self._daily_shock_urg
+
+        expected = base_urgences * weather_factor * daily_factor * vacation_factor * shock_factor
+
+        # Autocorrélation (inertie jour à jour)
+        ar_weight = self._get_param_float('poids_autocorrelation_urgences', 0.20)
+        if self._prev_urgences is not None:
+            expected = (1 - ar_weight) * expected + ar_weight * self._prev_urgences
+
+        urgences = int(expected)
+        self._prev_urgences = urgences
         return max(urgences, 300)
     
     def detect_events(self, date, weather):
@@ -323,7 +528,36 @@ class SmartCareDataGenerator:
             elif evenement == 'Canicule':
                 if weather['temperature_max'] >= 25:
                     events.append(evenement)
+
+        # Événements aléatoires (accidents, grèves, pollution)
+        random_events = {
+            'Accident_majeur': self._get_param_float('prob_event_accident_majeur', 0.002),
+            'Greve_personnel': self._get_param_float('prob_event_greve_personnel', 0.003),
+            'Pic_pollution': self._get_param_float('prob_event_pic_pollution', 0.005),
+        }
+        for evt, prob in random_events.items():
+            if random.random() < prob:
+                events.append(evt)
+
+        # Événements datés (Paris/IDF) ajoutés aux règles
+        fixed_events = [
+            ('Tension_hiver_2022', '2022-01-10', '2022-03-15'),
+            ('Plan_blanc_covid_leve_2022', '2022-03-15', '2022-03-31'),
+            ('Canicule_IDF_2022', '2022-07-18', '2022-07-19'),
+            ('Triple_epidemie_hiver_2022', '2022-11-15', '2023-01-31'),
+            ('Coupe_monde_rugby_2023', '2023-09-08', '2023-10-28'),
+            ('JO_Paris_2024', '2024-07-26', '2024-08-11'),
+            ('Plan_blanc_hiver_2024_2025', '2024-12-15', '2025-02-15'),
+            ('Tension_ete_2025', '2025-07-01', '2025-08-31'),
+        ]
+        for evt, start_str, end_str in fixed_events:
+            start = pd.Timestamp(start_str)
+            end = pd.Timestamp(end_str)
+            if start <= date <= end:
+                events.append(evt)
         
+        # Éviter les doublons
+        events = list(dict.fromkeys(events))
         return events if events else ['Aucun']
     
     def generate_daily_data(self, start_date, end_date, hospital_id):
@@ -333,12 +567,25 @@ class SmartCareDataGenerator:
         dates = pd.date_range(start=start_date, end=end_date, freq='D')
         daily_data = []
         weather_data = []
+
+        # Réinitialiser l'inertie entre séries
+        self._prev_admissions = None
+        self._prev_urgences = None
         
         print(f"Génération des données du {start_date.date()} au {end_date.date()}...")
         
         for i, date in enumerate(dates):
             if (i + 1) % 100 == 0:
                 print(f"  {i + 1} jours générés...")
+
+            # Chocs rares (afflux massif / incident local)
+            shock_prob = self._get_param_float('prob_choc_afflux', 0.006)
+            if random.random() < shock_prob:
+                self._daily_shock_adm = np.random.uniform(1.15, 1.40)
+                self._daily_shock_urg = np.random.uniform(1.20, 1.55)
+            else:
+                self._daily_shock_adm = 1.0
+                self._daily_shock_urg = 1.0
             
             # Récupérer les données météo
             weather = self.get_weather_data(date)
@@ -437,7 +684,7 @@ class SmartCareDataGenerator:
         return pd.DataFrame(daily_data), pd.DataFrame(weather_data)
     
     def generate_school_holidays(self):
-        """Génère les dates de vacances scolaires pour 2022-2024"""
+        """Génère les dates de vacances scolaires pour 2022-2026"""
         holidays = []
         zone = 'Zone C'
         
@@ -465,6 +712,22 @@ class SmartCareDataGenerator:
                 ('2024-07-01', '2024-08-31', 'Ete'),
                 ('2024-10-22', '2024-11-01', 'Toussaint'),
                 ('2024-12-20', '2024-12-31', 'Noel'),
+            ],
+            2025: [
+                ('2025-01-01', '2025-01-05', 'Noel'),
+                ('2025-02-09', '2025-02-21', 'Hiver'),
+                ('2025-04-06', '2025-04-20', 'Printemps'),
+                ('2025-07-01', '2025-08-31', 'Ete'),
+                ('2025-10-19', '2025-11-02', 'Toussaint'),
+                ('2025-12-20', '2025-12-31', 'Noel'),
+            ],
+            2026: [
+                ('2026-01-01', '2026-01-05', 'Noel'),
+                ('2026-02-08', '2026-02-20', 'Hiver'),
+                ('2026-04-05', '2026-04-19', 'Printemps'),
+                ('2026-07-01', '2026-08-31', 'Ete'),
+                ('2026-10-18', '2026-11-01', 'Toussaint'),
+                ('2026-12-20', '2026-12-31', 'Noel'),
             ]
         }
         
@@ -486,7 +749,7 @@ class SmartCareDataGenerator:
         return pd.DataFrame(holidays)
     
     def generate_event_detection_rules_extended(self):
-        """Génère les règles d'événements étendues pour 2022-2024"""
+        """Génère les règles d'événements étendues pour 2022-2026"""
         rules = []
         
         base_rules = [
@@ -513,25 +776,89 @@ class SmartCareDataGenerator:
                 'condition_meteo': 'Soleil',
                 'priorite_evenement': 10,
                 'evenement_declenche': 'FALSE'
+            },
+            {
+                'evenement_type': 'Tension_hiver_2022',
+                'condition_temperature': 'date_range=2022-01-10..2022-03-15',
+                'condition_duree': 'fixed',
+                'condition_meteo': 'any',
+                'priorite_evenement': 8,
+                'evenement_declenche': 'TRUE'
+            },
+            {
+                'evenement_type': 'Plan_blanc_covid_leve_2022',
+                'condition_temperature': 'date_range=2022-03-15..2022-03-31',
+                'condition_duree': 'fixed',
+                'condition_meteo': 'any',
+                'priorite_evenement': 4,
+                'evenement_declenche': 'TRUE'
+            },
+            {
+                'evenement_type': 'Canicule_IDF_2022',
+                'condition_temperature': 'date_range=2022-07-18..2022-07-19',
+                'condition_duree': 'fixed',
+                'condition_meteo': 'Soleil',
+                'priorite_evenement': 10,
+                'evenement_declenche': 'TRUE'
+            },
+            {
+                'evenement_type': 'Triple_epidemie_hiver_2022',
+                'condition_temperature': 'date_range=2022-11-15..2023-01-31',
+                'condition_duree': 'fixed',
+                'condition_meteo': 'any',
+                'priorite_evenement': 9,
+                'evenement_declenche': 'TRUE'
+            },
+            {
+                'evenement_type': 'Coupe_monde_rugby_2023',
+                'condition_temperature': 'date_range=2023-09-08..2023-10-28',
+                'condition_duree': 'fixed',
+                'condition_meteo': 'any',
+                'priorite_evenement': 6,
+                'evenement_declenche': 'TRUE'
+            },
+            {
+                'evenement_type': 'JO_Paris_2024',
+                'condition_temperature': 'date_range=2024-07-26..2024-08-11',
+                'condition_duree': 'fixed',
+                'condition_meteo': 'any',
+                'priorite_evenement': 7,
+                'evenement_declenche': 'TRUE'
+            },
+            {
+                'evenement_type': 'Plan_blanc_hiver_2024_2025',
+                'condition_temperature': 'date_range=2024-12-15..2025-02-15',
+                'condition_duree': 'fixed',
+                'condition_meteo': 'any',
+                'priorite_evenement': 9,
+                'evenement_declenche': 'TRUE'
+            },
+            {
+                'evenement_type': 'Tension_ete_2025',
+                'condition_temperature': 'date_range=2025-07-01..2025-08-31',
+                'condition_duree': 'fixed',
+                'condition_meteo': 'any',
+                'priorite_evenement': 5,
+                'evenement_declenche': 'TRUE'
             }
         ]
         
-        for year in [2022, 2023, 2024]:
+        for year in [2022, 2023, 2024, 2025, 2026]:
             for rule in base_rules:
                 rules.append(rule)
         
         return pd.DataFrame(rules)
     
     def generate_special_events_extended(self):
-        """Génère les événements spéciaux étendus pour 2022-2024"""
+        """Génère les événements spéciaux étendus pour 2022-2026"""
         events = []
         
-        for year in [2022, 2023, 2024]:
+        for year in [2022, 2023, 2024, 2025, 2026]:
             events.extend([
                 {
                     'evenement_type': 'Epidemie_grippe',
                     'date_debut': f'{year}-12-15',
-                    'date_fin': f'{year}-02-10' if year < 2024 else '2025-02-10',
+                    'date_fin': f'{year}-02-10' if year < 2026 else '2027-02-10',
                     'condition_declenchement': 'pic hivernal + surveillance',
                     'impact_admissions_min': 0.1,
                     'impact_admissions_max': 0.25
@@ -551,8 +878,100 @@ class SmartCareDataGenerator:
                     'condition_declenchement': 'temp_max > 30 sur plusieurs jours',
                     'impact_admissions_min': 0.08,
                     'impact_admissions_max': 0.20
+                },
+                {
+                    'evenement_type': 'Accident_majeur',
+                    'date_debut': f'{year}-01-01',
+                    'date_fin': f'{year}-12-31',
+                    'condition_declenchement': 'incident majeur imprévisible',
+                    'impact_admissions_min': 0.10,
+                    'impact_admissions_max': 0.30
+                },
+                {
+                    'evenement_type': 'Greve_personnel',
+                    'date_debut': f'{year}-01-01',
+                    'date_fin': f'{year}-12-31',
+                    'condition_declenchement': 'mouvement social',
+                    'impact_admissions_min': -0.08,
+                    'impact_admissions_max': 0.05
+                },
+                {
+                    'evenement_type': 'Pic_pollution',
+                    'date_debut': f'{year}-01-01',
+                    'date_fin': f'{year}-12-31',
+                    'condition_declenchement': 'pollution atmosphérique',
+                    'impact_admissions_min': 0.03,
+                    'impact_admissions_max': 0.10
                 }
             ])
+
+        # Événements spécifiques Paris/IDF (2022-2025)
+        events.extend([
+            {
+                'evenement_type': 'Tension_hiver_2022',
+                'date_debut': '2022-01-10',
+                'date_fin': '2022-03-15',
+                'condition_declenchement': 'tension hivernale + sortie progressive Covid',
+                'impact_admissions_min': 0.05,
+                'impact_admissions_max': 0.12
+            },
+            {
+                'evenement_type': 'Plan_blanc_covid_leve_2022',
+                'date_debut': '2022-03-15',
+                'date_fin': '2022-03-31',
+                'condition_declenchement': 'levée plan blanc Covid AP-HP',
+                'impact_admissions_min': -0.03,
+                'impact_admissions_max': 0.0
+            },
+            {
+                'evenement_type': 'Canicule_IDF_2022',
+                'date_debut': '2022-07-18',
+                'date_fin': '2022-07-19',
+                'condition_declenchement': 'vigilance orange canicule IDF',
+                'impact_admissions_min': 0.12,
+                'impact_admissions_max': 0.25
+            },
+            {
+                'evenement_type': 'Triple_epidemie_hiver_2022',
+                'date_debut': '2022-11-15',
+                'date_fin': '2023-01-31',
+                'condition_declenchement': 'grippe + bronchiolite + Covid',
+                'impact_admissions_min': 0.15,
+                'impact_admissions_max': 0.35
+            },
+            {
+                'evenement_type': 'Coupe_monde_rugby_2023',
+                'date_debut': '2023-09-08',
+                'date_fin': '2023-10-28',
+                'condition_declenchement': 'mass gathering (Stade de France/Paris)',
+                'impact_admissions_min': 0.03,
+                'impact_admissions_max': 0.08
+            },
+            {
+                'evenement_type': 'JO_Paris_2024',
+                'date_debut': '2024-07-26',
+                'date_fin': '2024-08-11',
+                'condition_declenchement': 'jeux olympiques Paris',
+                'impact_admissions_min': 0.04,
+                'impact_admissions_max': 0.10
+            },
+            {
+                'evenement_type': 'Plan_blanc_hiver_2024_2025',
+                'date_debut': '2024-12-15',
+                'date_fin': '2025-02-15',
+                'condition_declenchement': 'tension hivernale grippe',
+                'impact_admissions_min': 0.10,
+                'impact_admissions_max': 0.25
+            },
+            {
+                'evenement_type': 'Tension_ete_2025',
+                'date_debut': '2025-07-01',
+                'date_fin': '2025-08-31',
+                'condition_declenchement': 'organisation accès aux soins été',
+                'impact_admissions_min': 0.02,
+                'impact_admissions_max': 0.06
+            },
+        ])
         
         return pd.DataFrame(events)
     
@@ -615,14 +1034,14 @@ class SmartCareDataGenerator:
         return pd.DataFrame(variations)
     
     def generate_all_years(self):
-        """Génère les données pour 2022, 2023 et 2024"""
+        """Génère les données pour 2022, 2023, 2024, 2025 et 2026"""
         hospital_id = self.get_parameter('hospital_reference')
         
         all_daily_data = []
         all_weather_data = []
         
         # Générer pour chaque année
-        for year in [2022, 2023, 2024]:
+        for year in [2022, 2023, 2024, 2025, 2026]:
             print(f"\n{'='*50}")
             print(f"Génération de l'année {year}")
             print(f"{'='*50}")
@@ -670,8 +1089,8 @@ class SmartCareDataGenerator:
 
 def main():
     """Fonction principale"""
-    # Chemin de base
-    base_path = r'c:\Users\evan_\Desktop\smart care'
+    # Chemin de base (dossier data/raw du projet)
+    base_path = Path(__file__).resolve().parents[1] / "data" / "raw"
     
     # Initialiser le générateur
     generator = SmartCareDataGenerator(base_path)
@@ -684,7 +1103,7 @@ def main():
     print(f"\n{'='*50}")
     print("GÉNÉRATEUR DE DONNÉES SMART CARE")
     print(f"{'='*50}")
-    print(f"Période: 2022-2024")
+    print(f"Période: 2022-2026")
     print(f"Hôpital: {generator.get_parameter('hospital_reference')}")
     print(f"Mode: {generator.get_parameter('mode_generation')}")
     print(f"Seed: {seed}")
@@ -720,27 +1139,27 @@ def main():
     # Sauvegarder les données
     output_daily = os.path.join(
         base_path,
-        f'Jeu de données - Smart Care - daily_hospital_context_2022-2024_generated.csv'
+        f'Jeu de données - Smart Care - daily_hospital_context_2022-2026_generated.csv'
     )
     output_weather = os.path.join(
         base_path,
-        f'Jeu de données - Smart Care - weather_daily_reference_2022-2024_generated.csv'
+        f'Jeu de données - Smart Care - weather_daily_reference_2022-2026_generated.csv'
     )
     output_holidays = os.path.join(
         base_path,
-        f'Jeu de données - Smart Care - school_holidays_reference_2022-2024_generated.csv'
+        f'Jeu de données - Smart Care - school_holidays_reference_2022-2026_generated.csv'
     )
     output_events_rules = os.path.join(
         base_path,
-        f'Jeu de données - Smart Care - event_detection_rules_2022-2024_generated.csv'
+        f'Jeu de données - Smart Care - event_detection_rules_2022-2026_generated.csv'
     )
     output_special_events = os.path.join(
         base_path,
-        f'Jeu de données - Smart Care - special_event_reference_2022-2024_generated.csv'
+        f'Jeu de données - Smart Care - special_event_reference_2022-2026_generated.csv'
     )
     output_staff_variation = os.path.join(
         base_path,
-        f'Jeu de données - Smart Care - staff_varation_rules_2022-2024_generated.csv'
+        f'Jeu de données - Smart Care - staff_varation_rules_2022-2026_generated.csv'
     )
     
     generator.save_data(df_daily, output_daily)
@@ -751,14 +1170,14 @@ def main():
     generator.save_data(df_staff_variation, output_staff_variation)
     
     print(f"\n{'='*50}")
-    print("FICHIERS GÉNÉRÉS (2022-2024)")
+    print("FICHIERS GÉNÉRÉS (2022-2026)")
     print(f"{'='*50}")
-    print(f"✓ daily_hospital_context_2022-2024_generated.csv")
-    print(f"✓ weather_daily_reference_2022-2024_generated.csv")
-    print(f"✓ school_holidays_reference_2022-2024_generated.csv")
-    print(f"✓ event_detection_rules_2022-2024_generated.csv")
-    print(f"✓ special_event_reference_2022-2024_generated.csv")
-    print(f"✓ staff_varation_rules_2022-2024_generated.csv")
+    print(f"✓ daily_hospital_context_2022-2026_generated.csv")
+    print(f"✓ weather_daily_reference_2022-2026_generated.csv")
+    print(f"✓ school_holidays_reference_2022-2026_generated.csv")
+    print(f"✓ event_detection_rules_2022-2026_generated.csv")
+    print(f"✓ special_event_reference_2022-2026_generated.csv")
+    print(f"✓ staff_varation_rules_2022-2026_generated.csv")
     print(f"\nFichiers de référence statiques (originaux):")
     print(f"  - generation_parameters.csv")
     print(f"  - hospital_baseline.csv")

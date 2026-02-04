@@ -1,7 +1,19 @@
 parametre,valeur,description
-annee_simulee,2022,année simulée
+annee_simulee,2025,année simulée
 hospital_reference,HOP_0001,hôpital de référence
 seed_random,42,reproductibilité
 mode_generation,realiste,génération réaliste
 taux_bruit_admissions,0.20,variance journalière
 zone_vacances,Zone C,Paris
+tendance_annuelle_admissions,0.02,trend annuel admissions
+amplitude_saisonnalite,0.08,amplitude saisonnalité annuelle
+poids_autocorrelation_admissions,0.25,inertie jour à jour admissions
+poids_autocorrelation_urgences,0.20,inertie jour à jour urgences
+prob_choc_afflux,0.006,probabilité de pic quotidien
+tendance_annuelle_staff,-0.005,trend annuel staff (baisse légère)
+amplitude_saisonnalite_staff,0.03,amplitude saisonnalité staff
+facteur_vacances_staff,0.92,réduction staff pendant vacances
+taux_bruit_staff,0.06,variabilité journalière staff
+prob_event_accident_majeur,0.002,probabilité quotidienne accident majeur
+prob_event_greve_personnel,0.003,probabilité quotidienne grève personnel
+prob_event_pic_pollution,0.005,probabilité quotidienne pic pollution
