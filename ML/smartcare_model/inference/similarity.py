@@ -206,3 +206,35 @@ def calculate_historical_trend(
         "adm_moyenne_start": adm_start,
         "adm_moyenne_end": adm_end,
     }
+
+
+def evaluate_knn_quality(similar_days: pd.DataFrame) -> Dict[str, any]:
+    """Évaluer la qualité des jours similaires trouvés par k-NN.
+    
+    Args:
+        similar_days: DataFrame des jours similaires avec colonne 'similarity_distance'.
+    
+    Returns:
+        Dict avec métriques de qualité : distance moyenne, écart-type admissions, dates top 3.
+    """
+    metrics = {
+        "n_jours": len(similar_days),
+        "distance_moyenne": similar_days["similarity_distance"].mean(),
+        "distance_min": similar_days["similarity_distance"].min(),
+        "distance_max": similar_days["similarity_distance"].max(),
+    }
+    
+    if "nombre_admissions" in similar_days.columns:
+        metrics["adm_moyenne"] = similar_days["nombre_admissions"].mean()
+        metrics["adm_std"] = similar_days["nombre_admissions"].std()
+        metrics["adm_min"] = similar_days["nombre_admissions"].min()
+        metrics["adm_max"] = similar_days["nombre_admissions"].max()
+    
+    # Top 3 jours les plus similaires
+    if "date" in similar_days.columns:
+        top_3 = similar_days.nsmallest(3, "similarity_distance")
+        metrics["top_3_dates"] = top_3["date"].tolist()
+        if "nombre_admissions" in top_3.columns:
+            metrics["top_3_admissions"] = top_3["nombre_admissions"].tolist()
+    
+    return metrics

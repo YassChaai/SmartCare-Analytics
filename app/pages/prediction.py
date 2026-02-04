@@ -21,6 +21,7 @@ try:
         find_similar_days,
         compute_synthetic_lags,
         calculate_historical_trend,
+        evaluate_knn_quality,
     )
 except Exception as e:
     print(f"[ERREUR] Import smartcare_model échoué: {e}")
@@ -32,6 +33,7 @@ except Exception as e:
     find_similar_days = None
     compute_synthetic_lags = None
     calculate_historical_trend = None
+    evaluate_knn_quality = None
 
 
 def _load_metrics_json():
@@ -282,7 +284,39 @@ def show(df, model, model_available):
                                 k=10
                             )
                             
-                            st.success(f"✓ {len(similar_days)} jours similaires trouvés (distance moyenne : {similar_days['similarity_distance'].mean():.2f})")
+                            # Évaluer et afficher les métriques k-NN
+                            if evaluate_knn_quality is not None:
+                                knn_metrics = evaluate_knn_quality(similar_days)
+                                
+                                st.success(f"✓ {knn_metrics['n_jours']} jours similaires trouvés")
+                                
+                                # Afficher les métriques dans un expander
+                                with st.expander("📊 Métriques de qualité k-NN", expanded=True):
+                                    col1, col2, col3 = st.columns(3)
+                                    
+                                    with col1:
+                                        st.metric("Distance moyenne", f"{knn_metrics['distance_moyenne']:.2f}")
+                                        st.caption(f"Min: {knn_metrics['distance_min']:.2f} | Max: {knn_metrics['distance_max']:.2f}")
+                                    
+                                    with col2:
+                                        if "adm_moyenne" in knn_metrics:
+                                            st.metric("Admissions moyennes", f"{knn_metrics['adm_moyenne']:.0f}")
+                                            st.caption(f"Écart-type: {knn_metrics['adm_std']:.1f}")
+                                    
+                                    with col3:
+                                        if "adm_min" in knn_metrics and "adm_max" in knn_metrics:
+                                            st.metric("Fourchette admissions", f"{knn_metrics['adm_min']:.0f} - {knn_metrics['adm_max']:.0f}")
+                                    
+                                    # Top 3 jours les plus similaires
+                                    if "top_3_dates" in knn_metrics:
+                                        st.markdown("**🎯 Top 3 jours les plus similaires :**")
+                                        for i, date in enumerate(knn_metrics["top_3_dates"][:3], 1):
+                                            adm = ""
+                                            if "top_3_admissions" in knn_metrics and i-1 < len(knn_metrics["top_3_admissions"]):
+                                                adm = f" → {knn_metrics['top_3_admissions'][i-1]:.0f} admissions"
+                                            st.caption(f"{i}. {date.strftime('%d/%m/%Y')}{adm}")
+                            else:
+                                st.success(f"✓ {len(similar_days)} jours similaires trouvés (distance moyenne : {similar_days['similarity_distance'].mean():.2f})")
                             
                             # Calculer les lags synthétiques
                             synthetic_lags = compute_synthetic_lags(similar_days)

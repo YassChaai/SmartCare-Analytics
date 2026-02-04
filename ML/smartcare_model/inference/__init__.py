@@ -8,6 +8,7 @@ from smartcare_model.inference.predict import (
 from smartcare_model.inference.similarity import (
     calculate_historical_trend,
     compute_synthetic_lags,
+    evaluate_knn_quality,
     find_similar_days,
 )
 
@@ -17,5 +18,6 @@ __all__ = [
     "prepare_prediction_row",
     "calculate_historical_trend",
     "compute_synthetic_lags",
+    "evaluate_knn_quality",
     "find_similar_days",
 ]
