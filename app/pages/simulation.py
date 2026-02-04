@@ -20,6 +20,90 @@ def show(df):
     
     col1, col2 = st.columns([1, 2])
     
+    scenario_presets = {
+        "🦠 Épidémie (Grippe/Covid)": {
+            "admissions": (0, 200, 100),
+            "urgences": (0, 300, 140),
+            "staff": (0, 50, 15),
+            "lits": (0, 100, 80),
+        },
+        "🔥 Canicule": {
+            "admissions": (0, 150, 65),
+            "urgences": (0, 200, 80),
+            "staff": (0, 30, 8),
+            "lits": (0, 80, 55),
+        },
+        "❄️ Vague de froid": {
+            "admissions": (0, 120, 55),
+            "urgences": (0, 150, 70),
+            "staff": (0, 25, 10),
+            "lits": (0, 70, 50),
+        },
+        "🏥 Plan blanc / Tension hivernale": {
+            "admissions": (0, 200, 120),
+            "urgences": (0, 250, 160),
+            "staff": (0, 40, 20),
+            "lits": (0, 120, 90),
+        },
+        "🚫 Grève du personnel": {
+            "admissions": (-50, 50, -10),
+            "urgences": (0, 100, 45),
+            "staff": (0, 80, 40),
+            "lits": (-30, 50, 15),
+        },
+        "🚨 Afflux massif (accident)": {
+            "admissions": (0, 500, 250),
+            "urgences": (0, 1000, 500),
+            "staff": (0, 20, 0),
+            "lits": (0, 150, 110),
+        },
+        "🌫️ Pic pollution": {
+            "admissions": (0, 80, 25),
+            "urgences": (0, 120, 40),
+            "staff": (0, 20, 5),
+            "lits": (0, 60, 30),
+        },
+        "🏉 Coupe du monde Rugby 2023": {
+            "admissions": (0, 80, 20),
+            "urgences": (0, 120, 35),
+            "staff": (0, 15, 5),
+            "lits": (0, 60, 25),
+        },
+        "🥇 JO Paris 2024": {
+            "admissions": (0, 80, 25),
+            "urgences": (0, 120, 45),
+            "staff": (0, 15, 5),
+            "lits": (0, 60, 30),
+        },
+        "🌞 Tension été": {
+            "admissions": (0, 60, 20),
+            "urgences": (0, 80, 30),
+            "staff": (0, 35, 20),
+            "lits": (0, 70, 35),
+        },
+        "📅 Période de vacances": {
+            "admissions": (-30, 30, -5),
+            "urgences": (-20, 40, 5),
+            "staff": (0, 50, 25),
+            "lits": (-20, 30, 5),
+        },
+        "🎯 Personnalisé": {
+            "admissions": (-50, 500, 0),
+            "urgences": (-50, 1000, 0),
+            "staff": (-50, 80, 0),
+            "lits": (-50, 150, 0),
+        },
+    }
+
+    def _apply_preset():
+        preset = scenario_presets.get(st.session_state.scenario_type)
+        if not preset:
+            return
+        st.session_state.admission_increase = preset["admissions"][2]
+        st.session_state.urgence_increase = preset["urgences"][2]
+        st.session_state.staff_decrease = preset["staff"][2]
+        st.session_state.bed_pressure = preset["lits"][2]
+
     with col1:
         st.subheader("⚙️ Configuration du scénario")
         
@@ -29,11 +113,18 @@ def show(df):
                 "🦠 Épidémie (Grippe/Covid)",
                 "🔥 Canicule",
                 "❄️ Vague de froid",
+                "🏥 Plan blanc / Tension hivernale",
                 "🚫 Grève du personnel",
                 "🚨 Afflux massif (accident)",
+                "🌫️ Pic pollution",
+                "🏉 Coupe du monde Rugby 2023",
+                "🥇 JO Paris 2024",
+                "🌞 Tension été",
                 "📅 Période de vacances",
                 "🎯 Personnalisé"
-            ]
+            ],
+            key="scenario_type",
+            on_change=_apply_preset
         )
         
         start_date = st.date_input(
@@ -63,6 +154,7 @@ def show(df):
         st.subheader("📊 Paramètres d'impact")
         
         # Paramètres selon le type de scénario
+        preset = scenario_presets.get(scenario_type, scenario_presets["🎯 Personnalisé"])
         if "Épidémie" in scenario_type:
             st.info("🦠 **Scénario Épidémie**")
             
@@ -70,22 +162,30 @@ def show(df):
             with col_a:
                 admission_increase = st.slider(
                     "Augmentation admissions (%)",
-                    0, 200, int(50 + intensity * 100)
+                    preset["admissions"][0], preset["admissions"][1],
+                    int(preset["admissions"][2] + intensity * 100),
+                    key="admission_increase"
                 )
                 urgence_increase = st.slider(
                     "Augmentation urgences (%)",
-                    0, 300, int(80 + intensity * 120)
+                    preset["urgences"][0], preset["urgences"][1],
+                    int(preset["urgences"][2] + intensity * 120),
+                    key="urgence_increase"
                 )
             
             with col_b:
                 staff_decrease = st.slider(
                     "Réduction personnel (%)",
-                    0, 50, int(intensity * 30),
-                    help="Personnel malade"
+                    preset["staff"][0], preset["staff"][1],
+                    int(preset["staff"][2] + intensity * 30),
+                    help="Personnel malade",
+                    key="staff_decrease"
                 )
                 bed_pressure = st.slider(
                     "Pression sur les lits (%)",
-                    0, 100, int(60 + intensity * 40)
+                    preset["lits"][0], preset["lits"][1],
+                    int(preset["lits"][2] + intensity * 40),
+                    key="bed_pressure"
                 )
         
         elif "Canicule" in scenario_type:
@@ -95,22 +195,30 @@ def show(df):
             with col_a:
                 admission_increase = st.slider(
                     "Augmentation admissions (%)",
-                    0, 150, int(30 + intensity * 70)
+                    preset["admissions"][0], preset["admissions"][1],
+                    int(preset["admissions"][2] + intensity * 70),
+                    key="admission_increase"
                 )
                 urgence_increase = st.slider(
                     "Augmentation urgences (%)",
-                    0, 200, int(40 + intensity * 80)
+                    preset["urgences"][0], preset["urgences"][1],
+                    int(preset["urgences"][2] + intensity * 80),
+                    key="urgence_increase"
                 )
             
             with col_b:
                 staff_decrease = st.slider(
                     "Réduction personnel (%)",
-                    0, 30, int(intensity * 15),
-                    help="Congés d'été"
+                    preset["staff"][0], preset["staff"][1],
+                    int(preset["staff"][2] + intensity * 15),
+                    help="Congés d'été",
+                    key="staff_decrease"
                 )
                 bed_pressure = st.slider(
                     "Pression sur les lits (%)",
-                    0, 80, int(40 + intensity * 30)
+                    preset["lits"][0], preset["lits"][1],
+                    int(preset["lits"][2] + intensity * 30),
+                    key="bed_pressure"
                 )
         
         elif "Vague de froid" in scenario_type:
@@ -120,22 +228,62 @@ def show(df):
             with col_a:
                 admission_increase = st.slider(
                     "Augmentation admissions (%)",
-                    0, 120, int(25 + intensity * 60)
+                    preset["admissions"][0], preset["admissions"][1],
+                    int(preset["admissions"][2] + intensity * 60),
+                    key="admission_increase"
                 )
                 urgence_increase = st.slider(
                     "Augmentation urgences (%)",
-                    0, 150, int(35 + intensity * 70)
+                    preset["urgences"][0], preset["urgences"][1],
+                    int(preset["urgences"][2] + intensity * 70),
+                    key="urgence_increase"
                 )
             
             with col_b:
                 staff_decrease = st.slider(
                     "Réduction personnel (%)",
-                    0, 25, int(intensity * 15),
-                    help="Difficultés de transport"
+                    preset["staff"][0], preset["staff"][1],
+                    int(preset["staff"][2] + intensity * 15),
+                    help="Difficultés de transport",
+                    key="staff_decrease"
                 )
                 bed_pressure = st.slider(
                     "Pression sur les lits (%)",
-                    0, 70, int(35 + intensity * 35)
+                    preset["lits"][0], preset["lits"][1],
+                    int(preset["lits"][2] + intensity * 35),
+                    key="bed_pressure"
+                )
+
+        elif "Plan blanc" in scenario_type or "Tension hivernale" in scenario_type:
+            st.error("🏥 **Scénario Plan blanc / Tension hivernale**")
+
+            col_a, col_b = st.columns(2)
+            with col_a:
+                admission_increase = st.slider(
+                    "Augmentation admissions (%)",
+                    preset["admissions"][0], preset["admissions"][1],
+                    int(preset["admissions"][2] + intensity * 80),
+                    key="admission_increase"
+                )
+                urgence_increase = st.slider(
+                    "Augmentation urgences (%)",
+                    preset["urgences"][0], preset["urgences"][1],
+                    int(preset["urgences"][2] + intensity * 100),
+                    key="urgence_increase"
+                )
+
+            with col_b:
+                staff_decrease = st.slider(
+                    "Réduction personnel (%)",
+                    preset["staff"][0], preset["staff"][1],
+                    int(preset["staff"][2] + intensity * 20),
+                    key="staff_decrease"
+                )
+                bed_pressure = st.slider(
+                    "Pression sur les lits (%)",
+                    preset["lits"][0], preset["lits"][1],
+                    int(preset["lits"][2] + intensity * 40),
+                    key="bed_pressure"
                 )
         
         elif "Grève" in scenario_type:
@@ -145,23 +293,31 @@ def show(df):
             with col_a:
                 admission_increase = st.slider(
                     "Variation admissions (%)",
-                    -50, 50, int(-20 + intensity * 20),
-                    help="Peut diminuer si report d'interventions"
+                    preset["admissions"][0], preset["admissions"][1],
+                    int(preset["admissions"][2] + intensity * 20),
+                    help="Peut diminuer si report d'interventions",
+                    key="admission_increase"
                 )
                 urgence_increase = st.slider(
                     "Augmentation urgences (%)",
-                    0, 100, int(20 + intensity * 50),
-                    help="Patients se reportant aux urgences"
+                    preset["urgences"][0], preset["urgences"][1],
+                    int(preset["urgences"][2] + intensity * 50),
+                    help="Patients se reportant aux urgences",
+                    key="urgence_increase"
                 )
             
             with col_b:
                 staff_decrease = st.slider(
                     "Réduction personnel (%)",
-                    0, 80, int(30 + intensity * 50)
+                    preset["staff"][0], preset["staff"][1],
+                    int(preset["staff"][2] + intensity * 50),
+                    key="staff_decrease"
                 )
                 bed_pressure = st.slider(
                     "Pression sur les lits (%)",
-                    -30, 50, int(intensity * 30)
+                    preset["lits"][0], preset["lits"][1],
+                    int(preset["lits"][2] + intensity * 30),
+                    key="bed_pressure"
                 )
         
         elif "Afflux massif" in scenario_type:
@@ -171,22 +327,126 @@ def show(df):
             with col_a:
                 admission_increase = st.slider(
                     "Augmentation admissions (%)",
-                    0, 500, int(100 + intensity * 300)
+                    preset["admissions"][0], preset["admissions"][1],
+                    int(preset["admissions"][2] + intensity * 300),
+                    key="admission_increase"
                 )
                 urgence_increase = st.slider(
                     "Augmentation urgences (%)",
-                    0, 1000, int(200 + intensity * 600)
+                    preset["urgences"][0], preset["urgences"][1],
+                    int(preset["urgences"][2] + intensity * 600),
+                    key="urgence_increase"
                 )
             
             with col_b:
                 staff_decrease = st.slider(
                     "Réduction personnel (%)",
-                    0, 20, 0,
-                    help="Personnel en rappel possible"
+                    preset["staff"][0], preset["staff"][1],
+                    int(preset["staff"][2] + intensity * 0),
+                    help="Personnel en rappel possible",
+                    key="staff_decrease"
                 )
                 bed_pressure = st.slider(
                     "Pression sur les lits (%)",
-                    0, 150, int(80 + intensity * 70)
+                    preset["lits"][0], preset["lits"][1],
+                    int(preset["lits"][2] + intensity * 70),
+                    key="bed_pressure"
+                )
+
+        elif "pollution" in scenario_type.lower():
+            st.warning("🌫️ **Scénario Pic Pollution**")
+
+            col_a, col_b = st.columns(2)
+            with col_a:
+                admission_increase = st.slider(
+                    "Augmentation admissions (%)",
+                    preset["admissions"][0], preset["admissions"][1],
+                    int(preset["admissions"][2] + intensity * 30),
+                    key="admission_increase"
+                )
+                urgence_increase = st.slider(
+                    "Augmentation urgences (%)",
+                    preset["urgences"][0], preset["urgences"][1],
+                    int(preset["urgences"][2] + intensity * 40),
+                    key="urgence_increase"
+                )
+
+            with col_b:
+                staff_decrease = st.slider(
+                    "Réduction personnel (%)",
+                    preset["staff"][0], preset["staff"][1],
+                    int(preset["staff"][2] + intensity * 10),
+                    key="staff_decrease"
+                )
+                bed_pressure = st.slider(
+                    "Pression sur les lits (%)",
+                    preset["lits"][0], preset["lits"][1],
+                    int(preset["lits"][2] + intensity * 20),
+                    key="bed_pressure"
+                )
+
+        elif "Rugby" in scenario_type or "JO" in scenario_type:
+            st.info("🎟️ **Scénario Grand Événement**")
+
+            col_a, col_b = st.columns(2)
+            with col_a:
+                admission_increase = st.slider(
+                    "Augmentation admissions (%)",
+                    preset["admissions"][0], preset["admissions"][1],
+                    int(preset["admissions"][2] + intensity * 20),
+                    key="admission_increase"
+                )
+                urgence_increase = st.slider(
+                    "Augmentation urgences (%)",
+                    preset["urgences"][0], preset["urgences"][1],
+                    int(preset["urgences"][2] + intensity * 30),
+                    key="urgence_increase"
+                )
+
+            with col_b:
+                staff_decrease = st.slider(
+                    "Réduction personnel (%)",
+                    preset["staff"][0], preset["staff"][1],
+                    int(preset["staff"][2] + intensity * 5),
+                    key="staff_decrease"
+                )
+                bed_pressure = st.slider(
+                    "Pression sur les lits (%)",
+                    preset["lits"][0], preset["lits"][1],
+                    int(preset["lits"][2] + intensity * 20),
+                    key="bed_pressure"
+                )
+
+        elif "Tension été" in scenario_type or "été" in scenario_type:
+            st.warning("🌞 **Scénario Tension Été**")
+
+            col_a, col_b = st.columns(2)
+            with col_a:
+                admission_increase = st.slider(
+                    "Augmentation admissions (%)",
+                    preset["admissions"][0], preset["admissions"][1],
+                    int(preset["admissions"][2] + intensity * 15),
+                    key="admission_increase"
+                )
+                urgence_increase = st.slider(
+                    "Augmentation urgences (%)",
+                    preset["urgences"][0], preset["urgences"][1],
+                    int(preset["urgences"][2] + intensity * 20),
+                    key="urgence_increase"
+                )
+
+            with col_b:
+                staff_decrease = st.slider(
+                    "Réduction personnel (%)",
+                    preset["staff"][0], preset["staff"][1],
+                    int(preset["staff"][2] + intensity * 15),
+                    key="staff_decrease"
+                )
+                bed_pressure = st.slider(
+                    "Pression sur les lits (%)",
+                    preset["lits"][0], preset["lits"][1],
+                    int(preset["lits"][2] + intensity * 25),
+                    key="bed_pressure"
                 )
         
         elif "Vacances" in scenario_type:
@@ -196,21 +456,29 @@ def show(df):
             with col_a:
                 admission_increase = st.slider(
                     "Variation admissions (%)",
-                    -30, 30, int(-10 + intensity * 20)
+                    preset["admissions"][0], preset["admissions"][1],
+                    int(preset["admissions"][2] + intensity * 20),
+                    key="admission_increase"
                 )
                 urgence_increase = st.slider(
                     "Variation urgences (%)",
-                    -20, 40, int(-5 + intensity * 25)
+                    preset["urgences"][0], preset["urgences"][1],
+                    int(preset["urgences"][2] + intensity * 25),
+                    key="urgence_increase"
                 )
             
             with col_b:
                 staff_decrease = st.slider(
                     "Réduction personnel (%)",
-                    0, 50, int(20 + intensity * 20)
+                    preset["staff"][0], preset["staff"][1],
+                    int(preset["staff"][2] + intensity * 20),
+                    key="staff_decrease"
                 )
                 bed_pressure = st.slider(
                     "Variation lits (%)",
-                    -20, 30, int(-5 + intensity * 20)
+                    preset["lits"][0], preset["lits"][1],
+                    int(preset["lits"][2] + intensity * 20),
+                    key="bed_pressure"
                 )
         
         else:  # Personnalisé
@@ -220,21 +488,29 @@ def show(df):
             with col_a:
                 admission_increase = st.slider(
                     "Variation admissions (%)",
-                    -50, 500, 0
+                    preset["admissions"][0], preset["admissions"][1],
+                    preset["admissions"][2],
+                    key="admission_increase"
                 )
                 urgence_increase = st.slider(
                     "Variation urgences (%)",
-                    -50, 1000, 0
+                    preset["urgences"][0], preset["urgences"][1],
+                    preset["urgences"][2],
+                    key="urgence_increase"
                 )
             
             with col_b:
                 staff_decrease = st.slider(
                     "Variation personnel (%)",
-                    -50, 80, 0
+                    preset["staff"][0], preset["staff"][1],
+                    preset["staff"][2],
+                    key="staff_decrease"
                 )
                 bed_pressure = st.slider(
                     "Variation lits (%)",
-                    -50, 150, 0
+                    preset["lits"][0], preset["lits"][1],
+                    preset["lits"][2],
+                    key="bed_pressure"
                 )
     
     # Bouton de simulation
