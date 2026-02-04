@@ -539,23 +539,23 @@ st.markdown("""
 col1, col2, col3, col4, col5 = st.columns(5)
 
 with col1:
-    if st.button("🏠 Accueil", use_container_width=True, key="nav_accueil"):
+    if st.button("🏠 Accueil", width="stretch", key="nav_accueil"):
         st.session_state.active_page = "Accueil"
 
 with col2:
-    if st.button("📊 Analyse", use_container_width=True, key="nav_analyse"):
+    if st.button("📊 Analyse", width="stretch", key="nav_analyse"):
         st.session_state.active_page = "Analyse"
 
 with col3:
-    if st.button("🎯 Simulation", use_container_width=True, key="nav_simulation"):
+    if st.button("🎯 Simulation", width="stretch", key="nav_simulation"):
         st.session_state.active_page = "Simulation"
 
 with col4:
-    if st.button("🔮 Prédiction", use_container_width=True, key="nav_prediction"):
+    if st.button("🔮 Prédiction", width="stretch", key="nav_prediction"):
         st.session_state.active_page = "Prédiction"
 
 with col5:
-    if st.button("💡 Recommandations", use_container_width=True, key="nav_recommandations"):
+    if st.button("💡 Recommandations", width="stretch", key="nav_recommandations"):
         st.session_state.active_page = "Recommandations"
 
 st.markdown("---")
@@ -667,7 +667,7 @@ if page == "Accueil":
                 borderwidth=1
             )
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
     
     with col2:
         st.subheader("🛏️ Taux d'occupation des lits")
@@ -687,7 +687,7 @@ if page == "Accueil":
             paper_bgcolor='rgba(0,0,0,0)',
             font=dict(color='#e0e0e0')
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
     
     # Alertes et événements avec style moderne
     st.markdown("---")
@@ -831,7 +831,7 @@ elif page == "📊 Analyse Exploratoire":
                      annotation_text=f"Moyenne: {avg_value:.2f}")
         
         fig.update_layout(height=400)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         
         # Analyse par jour de semaine
         col1, col2 = st.columns(2)
@@ -852,7 +852,7 @@ elif page == "📊 Analyse Exploratoire":
                 color_continuous_scale='Blues'
             )
             fig.update_layout(height=300, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         
         with col2:
             st.markdown("#### 🌤️ Variation par saison")
@@ -866,7 +866,7 @@ elif page == "📊 Analyse Exploratoire":
                 color_continuous_scale='Oranges'
             )
             fig.update_layout(height=300, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
     
     with tab2:
         st.subheader("Matrice de corrélation")
@@ -897,7 +897,7 @@ elif page == "📊 Analyse Exploratoire":
             xaxis={'side': 'bottom'}
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         
         # Top corrélations
         st.markdown("#### 🔗 Top 10 des corrélations")
@@ -914,7 +914,7 @@ elif page == "📊 Analyse Exploratoire":
         df_corr = pd.DataFrame(corr_pairs)
         df_corr = df_corr.sort_values('Corrélation', key=abs, ascending=False).head(10)
         
-        st.dataframe(df_corr, use_container_width=True, hide_index=True)
+        st.dataframe(df_corr, width="stretch", hide_index=True)
     
     with tab3:
         st.subheader("Impact de la météo sur l'activité hospitalière")
@@ -934,7 +934,7 @@ elif page == "📊 Analyse Exploratoire":
                 }
             )
             fig.update_layout(height=350)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         
         with col2:
             st.markdown("#### ❄️ Conditions météo et urgences")
@@ -951,7 +951,7 @@ elif page == "📊 Analyse Exploratoire":
                 labels={'value': 'Nombre moyen', 'variable': 'Type'}
             )
             fig.update_layout(height=350)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
     
     with tab4:
         st.subheader("Statistiques descriptives")
@@ -970,7 +970,7 @@ elif page == "📊 Analyse Exploratoire":
         
         st.dataframe(
             stats_df.style.format("{:.2f}"),
-            use_container_width=True
+            width="stretch"
         )
         
         st.markdown("---")
@@ -994,7 +994,7 @@ elif page == "📊 Analyse Exploratoire":
                 marginal='box'
             )
             fig.update_layout(height=350)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         
         with col2:
             fig = px.box(
@@ -1005,7 +1005,7 @@ elif page == "📊 Analyse Exploratoire":
                 color='saison'
             )
             fig.update_layout(height=350)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
 # ========================================
 # PAGE : SIMULATION SCÉNARIOS (suite dans le prochain fichier)

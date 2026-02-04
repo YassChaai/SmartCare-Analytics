@@ -225,7 +225,7 @@ def show(df):
                 height=300
             )
             
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         
         with col2:
             fig = go.Figure()
@@ -247,7 +247,7 @@ def show(df):
                 height=300
             )
             
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         
         st.markdown("---")
         
@@ -329,7 +329,7 @@ def show(df):
             )
             fig.update_yaxes(tickformat=".0%")
             fig.add_hline(y=0.85, line_dash="dash", line_color="red")
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         
         with col2:
             # Saisonnalité
@@ -342,7 +342,7 @@ def show(df):
                 color='nombre_admissions',
                 color_continuous_scale='Reds'
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         
         st.markdown("---")
         

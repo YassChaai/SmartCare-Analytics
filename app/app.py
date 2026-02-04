@@ -28,54 +28,51 @@ st.set_page_config(
     initial_sidebar_state="collapsed"  # Sidebar cachée par défaut
 )
 
-# CSS personnalisé - Style Smart Care Dark
+# CSS personnalisé - Style Nike : Sobre, Impactant, Minimaliste
 st.markdown("""
 <style>
-    /* Import de la police */
+    /* Import de la police Nike-style - Helvetica Neue */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
     
-    /* Variables Smart Care - Style sobre */
+    /* Variables Nike Style */
     :root {
-        --sc-black: #000000;
-        --sc-dark: #1a1a1a;
-        --sc-card: #2a2a2a;
-        --sc-white: #FFFFFF;
-        --sc-orange: #FF5500;
-        --sc-gray: #999999;
-        --sc-light-gray: #cccccc;
-        --sc-text: #f5f5f5;
+        --nike-black: #111111;
+        --nike-white: #FFFFFF;
+        --nike-orange: #FF5700;
+        --nike-gray: #7E7E7E;
+        --nike-light-gray: #F5F5F5;
+        --nike-dark-gray: #2F2F2F;
+        --nike-gradient: linear-gradient(135deg, #111111 0%, #2F2F2F 100%);
+        --nike-accent: linear-gradient(135deg, #FF5700 0%, #FF8C00 100%);
     }
     
-    /* Style général - Dark */
+    /* Style général - Nike minimaliste */
     .main {
-        background: var(--sc-black);
+        background: #FFFFFF;
         font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
-        color: var(--sc-light-gray);
+        color: #111111;
     }
     
-    /* Masquer complètement le header Streamlit */
+    /* Masquer le header Streamlit par défaut */
     header[data-testid="stHeader"] {
-        display: none !important;
-        visibility: hidden !important;
-        height: 0 !important;
-        min-height: 0 !important;
+        background: transparent;
+        height: 0rem;
     }
     
     /* Réduire l'espace en haut */
     .block-container {
+        padding-top: 0rem;
         max-width: 100%;
     }
     
-    /* Masquer le menu hamburger et toolbar */
-    button[kind="header"],
-    [data-testid="stToolbar"],
-    [data-testid="stDecoration"] {
-        display: none !important;
+    /* Masquer le menu hamburger */
+    button[kind="header"] {
+        display: none;
     }
     
-    /* Navigation horizontale - FIXE en haut */
+    /* Navigation horizontale Nike - FIXE en haut */
     .navbar-container {
-        background: var(--sc-dark);
+        background: #111111;
         padding: 0;
         margin: 0;
         position: fixed;
@@ -84,12 +81,12 @@ st.markdown("""
         right: 0;
         z-index: 9999;
         border-bottom: 1px solid #2F2F2F;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
     
-    /* Ajouter de l'espace en haut du contenu pour compenser la navbar fixe */
+    /* Ajouter de l'espace en haut du contenu pour compenser la navbar fixe + boutons */
     .main .block-container {
-        padding-top: 300px !important;
+        padding-top: 170px !important;
         padding-bottom: 2rem;
     }
     
@@ -105,25 +102,25 @@ st.markdown("""
     .navbar-logo {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 15px;
     }
     
     .navbar-logo h1 {
-        font-size: 1.4rem;
-        font-weight: 700;
-        color: var(--sc-white);
+        font-size: 2rem;
+        font-weight: 900;
+        color: #FFFFFF;
         margin: 0;
-        letter-spacing: 0.5px;
+        letter-spacing: -0.5px;
         text-transform: uppercase;
     }
     
     .navbar-subtitle {
         font-size: 0.7rem;
-        color: var(--sc-gray);
-        font-weight: 400;
-        letter-spacing: 1px;
+        color: #7E7E7E;
+        font-weight: 500;
+        letter-spacing: 3px;
         text-transform: uppercase;
-        margin-top: 2px;
+        margin-top: 4px;
     }
     
     .navbar-nav {
@@ -138,48 +135,48 @@ st.markdown("""
     
     .nav-item {
         background: transparent;
-        color: var(--sc-gray);
-        padding: 10px 18px;
+        color: #FFFFFF;
+        padding: 12px 24px;
         border-radius: 0;
         border: none;
-        border-bottom: 2px solid transparent;
-        font-weight: 500;
-        font-size: 0.85rem;
+        border-bottom: 3px solid transparent;
+        font-weight: 600;
+        font-size: 0.95rem;
         transition: all 0.2s ease;
         cursor: pointer;
         white-space: nowrap;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.5px;
     }
     
     .nav-item:hover {
-        border-bottom-color: var(--sc-orange);
-        color: var(--sc-white);
+        border-bottom-color: #FF5700;
+        color: #FF5700;
     }
     
     .nav-item.active {
         background: transparent;
-        color: var(--sc-orange);
-        border-bottom-color: var(--sc-orange);
-        font-weight: 600;
+        color: #FFFFFF;
+        border-bottom-color: #FF5700;
+        font-weight: 700;
     }
     
-    /* Info tooltip */
+    /* Info tooltip Nike */
     .info-tooltip {
         position: relative;
         display: inline-block;
         width: 18px;
         height: 18px;
-        background: var(--sc-card);
+        background: #111111;
         border-radius: 50%;
-        color: var(--sc-white);
+        color: white;
         font-size: 11px;
         font-weight: 700;
         text-align: center;
         line-height: 18px;
         cursor: help;
         margin-left: 8px;
-        border: 1px solid var(--sc-gray);
+        border: 1px solid #7E7E7E;
     }
     
     .info-tooltip:hover::after {
@@ -188,17 +185,17 @@ st.markdown("""
         bottom: 125%;
         left: 50%;
         transform: translateX(-50%);
-        background: var(--sc-dark);
-        color: var(--sc-white);
+        background: #111111;
+        color: #FFFFFF;
         padding: 12px 16px;
         border-radius: 4px;
-        border-left: 3px solid var(--sc-orange);
+        border-left: 3px solid #FF5700;
         white-space: normal;
         width: 280px;
         font-size: 0.85rem;
         font-weight: 400;
         z-index: 1000;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         line-height: 1.5;
     }
     
@@ -209,46 +206,47 @@ st.markdown("""
         left: 50%;
         transform: translateX(-50%);
         border: 6px solid transparent;
-        border-top-color: var(--sc-dark);
+        border-top-color: #111111;
         z-index: 1000;
     }
     
-    /* Description sous graphiques */
+    /* Description sous graphiques Nike */
     .chart-description {
-        background: var(--sc-card);
-        border-left: 3px solid var(--sc-orange);
+        background: #F5F5F5;
+        border-left: 3px solid #FF5700;
         padding: 14px 18px;
-        border-radius: 4px;
+        border-radius: 0;
         margin-top: 12px;
         font-size: 0.9rem;
-        color: var(--sc-light-gray);
+        color: #111111;
         line-height: 1.7;
     }
     
     .chart-description strong {
-        color: var(--sc-white);
+        color: #111111;
         font-weight: 700;
     }
     
-    /* Header principal */
+    /* Header principal Nike - Bold & Clean */
     .main-header {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: var(--sc-white);
-        margin-bottom: 1rem;
-        letter-spacing: 0.5px;
-        text-transform: none;
-        padding-bottom: 0;
-        display: block;
+        font-size: 3rem;
+        font-weight: 900;
+        color: #111111;
+        margin-bottom: 2rem;
+        letter-spacing: -1px;
+        text-transform: uppercase;
+        border-bottom: 4px solid #FF5700;
+        padding-bottom: 0.5rem;
+        display: inline-block;
     }
     
-    /* Carte métrique */
+    /* Carte métrique Nike - Clean & Bold */
     .metric-card {
-        background: var(--sc-card);
+        background: #FFFFFF;
         padding: 2rem;
-        border-radius: 4px;
-        border: 1px solid #333333;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        border-radius: 0;
+        border: 1px solid #E5E5E5;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         transition: all 0.2s ease;
         position: relative;
         overflow: hidden;
@@ -259,9 +257,9 @@ st.markdown("""
         position: absolute;
         top: 0;
         left: 0;
-        width: 3px;
+        width: 4px;
         height: 0%;
-        background: var(--sc-orange);
+        background: #FF5700;
         transition: height 0.3s ease;
     }
     
@@ -270,57 +268,55 @@ st.markdown("""
     }
     
     .metric-card:hover {
-        transform: translateY(-2px);
-        border-color: #444444;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        transform: translateY(-4px);
+        border-color: #111111;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     }
     
-    /* Alertes */
+    /* Alertes Nike - Bold & Minimal */
     .alert-warning {
-        background: rgba(255, 85, 0, 0.1);
-        border-left: 3px solid var(--sc-orange);
+        background: #FFF3E0;
+        border-left: 4px solid #FF5700;
         padding: 1.2rem;
-        border-radius: 2px;
+        border-radius: 0;
         margin: 1rem 0;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        color: var(--sc-text);
-        font-weight: 500;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        color: #111111;
+        font-weight: 600;
     }
     
     .alert-danger {
-        background: rgba(211, 47, 47, 0.1);
+        background: #FFEBEE;
         border-left: 4px solid #D32F2F;
         padding: 1.2rem;
-        border-radius: 4px;
+        border-radius: 0;
         margin: 1rem 0;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        color: #ff6b6b;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        color: #D32F2F;
         font-weight: 700;
     }
     
     .alert-success {
-        background: rgba(56, 142, 60, 0.1);
+        background: #E8F5E9;
         border-left: 4px solid #388E3C;
         padding: 1.2rem;
-        border-radius: 4px;
+        border-radius: 0;
         margin: 1rem 0;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        color: #69db7c;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        color: #388E3C;
         font-weight: 600;
     }
     
     /* Cache la sidebar complètement */
     [data-testid="stSidebar"] {
         display: none !important;
-        background: var(--sc-dark);
-        border-right: 1px solid #2a2f3e;
     }
     
-    /* Métriques Streamlit */
+    /* Métriques Streamlit Nike */
     [data-testid="stMetricValue"] {
         font-size: 2.5rem;
         font-weight: 900;
-        color: var(--sc-white);
+        color: #111111;
     }
     
     [data-testid="stMetricDelta"] {
@@ -333,46 +329,56 @@ st.markdown("""
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 1px;
-        color: var(--sc-gray);
+        color: #7E7E7E;
     }
     
-    /* Boutons */
+    /* Sidebar Nike */
+    [data-testid="stSidebar"] {
+        background: #111111;
+        border-right: 1px solid #2F2F2F;
+    }
+    
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {
+        color: #FFFFFF;
+    }
+    
+    /* Boutons Nike - Just Do It */
     .stButton>button {
-        background: var(--sc-card);
-        color: var(--sc-white);
-        border: 1px solid #333333;
-        border-radius: 2px;
-        padding: 0.8rem 1.5rem;
-        font-weight: 600;
-        font-size: 0.85rem;
+        background: #111111;
+        color: #FFFFFF;
+        border: none;
+        border-radius: 0;
+        padding: 0.85rem 1.5rem;
+        font-weight: 700;
+        font-size: 0.9rem;
         transition: all 0.2s ease;
         text-transform: uppercase;
-        letter-spacing: 1px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        letter-spacing: 1.5px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         width: 100%;
     }
     
     .stButton>button:hover {
-        background: var(--sc-orange);
-        color: var(--sc-white);
-        border-color: var(--sc-orange);
-        box-shadow: 0 2px 12px rgba(255, 85, 0, 0.3);
+        background: #FF5700;
+        color: #FFFFFF;
+        transform: translateY(-3px);
+        box-shadow: 0 4px 16px rgba(255, 87, 0, 0.3);
     }
     
     /* Bouton actif (primary) */
     .stButton>button[kind="primary"],
     .stButton>button[data-baseweb="button"][kind="primary"] {
-        background: var(--sc-orange) !important;
-        color: var(--sc-white) !important;
-        border: 1px solid var(--sc-orange);
+        background: #FF5700 !important;
+        color: #FFFFFF !important;
+        border-bottom: 4px solid #111111;
     }
     
-    /* Tabs */
+    /* Tabs Nike */
     .stTabs [data-baseweb="tab-list"] {
         gap: 0;
         background: transparent;
         padding: 0;
-        border-bottom: 2px solid #2a2f3e;
+        border-bottom: 2px solid #E5E5E5;
     }
     
     .stTabs [data-baseweb="tab"] {
@@ -380,7 +386,7 @@ st.markdown("""
         border: none;
         border-bottom: 3px solid transparent;
         border-radius: 0;
-        color: var(--sc-gray);
+        color: #7E7E7E;
         font-weight: 600;
         padding: 12px 24px;
         transition: all 0.2s ease;
@@ -389,94 +395,81 @@ st.markdown("""
     }
     
     .stTabs [data-baseweb="tab"]:hover {
-        color: var(--sc-white);
-        border-bottom-color: var(--sc-orange);
+        color: #111111;
+        border-bottom-color: #FF5700;
     }
     
     .stTabs [aria-selected="true"] {
         background: transparent;
-        color: var(--sc-white);
-        border-bottom-color: var(--sc-orange);
+        color: #111111;
+        border-bottom-color: #FF5700;
         font-weight: 700;
     }
     
-    /* Sliders */
+    /* Sliders Nike */
     .stSlider [data-baseweb="slider"] {
-        background: transparent;
+        background: #FF5700;
     }
     
     .stSlider [role="slider"] {
-        background: var(--sc-orange) !important;
-        border: 2px solid var(--sc-orange) !important;
-        box-shadow: 0 0 8px rgba(255, 85, 0, 0.6);
-    }
-    
-    .stSlider [data-baseweb="slider-track"] {
-        background: #444444 !important;
-    }
-    
-    .stSlider input[type="range"]::-webkit-slider-thumb {
-        background: var(--sc-orange);
-        border: 2px solid var(--sc-white);
-        box-shadow: 0 0 8px rgba(255, 85, 0, 0.6);
-    }
-    
-    .stSlider input[type="range"]::-moz-range-thumb {
-        background: var(--sc-orange);
-        border: 2px solid var(--sc-white);
-        box-shadow: 0 0 8px rgba(255, 85, 0, 0.6);
+        background: #111111;
     }
     
     /* Expander */
     .streamlit-expanderHeader {
-        background: var(--sc-card);
-        border: 1px solid #2a2f3e;
-        border-radius: 4px;
+        background: linear-gradient(135deg, rgba(46, 63, 232, 0.1) 0%, rgba(26, 35, 126, 0.1) 100%);
+        border: 1px solid rgba(46, 63, 232, 0.3);
+        border-radius: 10px;
         font-weight: 600;
-        color: var(--sc-white);
+        color: #FFD700;
     }
     
     /* Headers */
     h1, h2, h3 {
-        color: var(--sc-white);
+        color: #FFD700;
         font-weight: 600;
-        letter-spacing: 0.5px;
+        letter-spacing: 0px;
     }
     
     h2 {
         font-size: 1.5rem;
-        color: var(--sc-white);
     }
     
     h3 {
         font-size: 1.2rem;
         font-weight: 500;
-        color: var(--sc-light-gray);
     }
     
     /* Texte général */
     p, label, span {
-        color: var(--sc-light-gray);
+        color: #e0e0e0;
     }
     
     /* Dataframe style */
     .dataframe {
-        background: var(--sc-card);
-        border: 1px solid #2a2f3e;
-        border-radius: 4px;
+        border: 1px solid rgba(46, 63, 232, 0.3);
+        border-radius: 10px;
         overflow: hidden;
-        color: var(--sc-white);
     }
     
-    /* Input fields */
-    .stTextInput>div>div>input,
-    .stSelectbox>div>div>div,
-    .stDateInput>div>div>input,
-    .stNumberInput>div>div>input {
-        background: var(--sc-card);
-        color: var(--sc-white);
-        border: 1px solid #2a2f3e;
-        border-radius: 4px;
+    /* Logo/Badge effet */
+    .kc-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #2E3FE8 0%, #FFD700 100%);
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 700;
+        color: white;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 1px;
+        box-shadow: 0 4px 15px rgba(46, 63, 232, 0.4);
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-5px); }
     }
     
     /* Scroll bar custom */
@@ -486,16 +479,16 @@ st.markdown("""
     }
     
     ::-webkit-scrollbar-track {
-        background: var(--sc-dark);
+        background: rgba(10, 14, 39, 0.5);
     }
     
     ::-webkit-scrollbar-thumb {
-        background: var(--sc-orange);
+        background: linear-gradient(135deg, #2E3FE8 0%, #FFD700 100%);
         border-radius: 5px;
     }
     
     ::-webkit-scrollbar-thumb:hover {
-        background: var(--sc-gold);
+        background: linear-gradient(135deg, #FFD700 0%, #2E3FE8 100%);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -640,14 +633,32 @@ nav_html = f"""
 """
 st.markdown(nav_html, unsafe_allow_html=True)
 
+st.markdown("---")
+
 page = st.session_state.active_page
 
 # ========================================
 # PAGE : ACCUEIL
 # ========================================
 if page == "Accueil":
-    st.markdown('<h1 class="main-header">Tableau de Bord</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="color: var(--sc-gray); text-align: left; margin-bottom: 2rem;">Vue d\'ensemble des indicateurs clés et alertes en temps réel</p>', unsafe_allow_html=True)
+    st.markdown("""
+        <div style="text-align: center; padding: 20px 0;">
+            <h1 style="
+                font-size: 2.5rem;
+                font-weight: 700;
+                background: linear-gradient(135deg, #2E3FE8 0%, #FFD700 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                margin: 0;
+            ">Tableau de Bord</h1>
+            <p style="
+                color: #b0b0b0;
+                font-size: 1rem;
+                font-weight: 400;
+                margin-top: 10px;
+            ">Vue d'ensemble des indicateurs clés et alertes en temps réel</p>
+        </div>
+    """, unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -731,7 +742,7 @@ if page == "Accueil":
                 borderwidth=1
             )
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
     
     with col2:
         st.subheader("🛏️ Taux d'occupation des lits")
@@ -761,7 +772,7 @@ if page == "Accueil":
             yaxis_title='Taux d\'occupation (%)',
             showlegend=False
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
     
     # Alertes et événements avec style moderne
     st.markdown("---")
@@ -906,7 +917,7 @@ elif page == "Analyse":
                      annotation_text=f"Moyenne: {avg_value:.2f}")
         
         fig.update_layout(height=400)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         
         # Analyse par jour de semaine
         col1, col2 = st.columns(2)
@@ -927,7 +938,7 @@ elif page == "Analyse":
                 color_continuous_scale='Blues'
             )
             fig.update_layout(height=300, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         
         with col2:
             st.markdown("#### 🌤️ Variation par saison")
@@ -941,7 +952,7 @@ elif page == "Analyse":
                 color_continuous_scale='Oranges'
             )
             fig.update_layout(height=300, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
     
     with tab2:
         st.subheader("Matrice de corrélation")
@@ -972,7 +983,7 @@ elif page == "Analyse":
             xaxis={'side': 'bottom'}
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         
         # Top corrélations
         st.markdown("#### 🔗 Top 10 des corrélations")
@@ -991,7 +1002,7 @@ elif page == "Analyse":
         
         df_corr_display = df_corr.copy()
         df_corr_display.index = df_corr_display.index.astype("string[python]")
-        st.dataframe(df_corr_display, use_container_width=True)
+        st.dataframe(df_corr_display, width="stretch")
     
     with tab3:
         st.subheader("Impact de la météo sur l'activité hospitalière")
@@ -1011,7 +1022,7 @@ elif page == "Analyse":
                 }
             )
             fig.update_layout(height=350)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         
         with col2:
             st.markdown("#### ❄️ Conditions météo et urgences")
@@ -1028,7 +1039,7 @@ elif page == "Analyse":
                 labels={'value': 'Nombre moyen', 'variable': 'Type'}
             )
             fig.update_layout(height=350)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
     
     with tab4:
         st.subheader("Statistiques descriptives")
@@ -1048,7 +1059,7 @@ elif page == "Analyse":
         
         st.dataframe(
             stats_df.style.format("{:.2f}"),
-            use_container_width=True
+            width="stretch"
         )
         
         st.markdown("---")
@@ -1072,7 +1083,7 @@ elif page == "Analyse":
                 marginal='box'
             )
             fig.update_layout(height=350)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         
         with col2:
             fig = px.box(
@@ -1083,7 +1094,7 @@ elif page == "Analyse":
                 color='saison'
             )
             fig.update_layout(height=350)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
 # ========================================
 # ========================================

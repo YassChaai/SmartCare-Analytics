@@ -183,7 +183,7 @@ def show(df, model, model_available):
         
         st.markdown("---")
         
-        if st.button("🚀 Calculer la Prédiction", type="primary", use_container_width=True):
+        if st.button("🚀 Calculer la Prédiction", type="primary", width="stretch"):
             
             with st.spinner("Calcul en cours..."):
                 
@@ -383,7 +383,7 @@ def show(df, model, model_available):
                         height=300
                     )
                     
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width="stretch")
                     st.caption(f"Intervalle: [{ic_low_adm:.0f} - {ic_high_adm:.0f}]")
                 
                 with col2:
@@ -412,7 +412,7 @@ def show(df, model, model_available):
                         height=300
                     )
                     
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width="stretch")
     
     # ========================================
     # TAB 2: Prédiction Multi-jours
@@ -444,7 +444,7 @@ def show(df, model, model_available):
             include_trend = st.checkbox("Inclure la tendance", value=True)
             confidence_level = st.slider("Niveau de confiance (%)", 80, 99, 95)
         
-        if st.button("🚀 Générer les Prédictions", type="primary", use_container_width=True):
+        if st.button("🚀 Générer les Prédictions", type="primary", width="stretch"):
             
             log_lines = []
             def _log(msg):
@@ -578,7 +578,7 @@ def show(df, model, model_available):
                         height=350
                     )
                     
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width="stretch")
                 
                 with col2:
                     fig = go.Figure()
@@ -606,7 +606,7 @@ def show(df, model, model_available):
                         height=350
                     )
                     
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width="stretch")
                 
                 # Statistiques
                 st.markdown("---")
