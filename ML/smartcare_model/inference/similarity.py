@@ -154,7 +154,8 @@ def compute_synthetic_lags(
 def calculate_historical_trend(
     df: pd.DataFrame,
     start_year: int = 2022,
-    end_year: int = 2024,
+    end_year: Optional[int] = None,
+    target_year: Optional[int] = None,
 ) -> Dict[str, float]:
     """Calculer la tendance historique d'évolution des admissions.
     
@@ -175,6 +176,12 @@ def calculate_historical_trend(
             "adm_moyenne_end": 0.0,
         }
     
+    # Déterminer l'année de fin si non fournie
+    if end_year is None:
+        end_year = int(df["annee"].max())
+    if target_year is None:
+        target_year = end_year
+
     # Calculer les moyennes par année
     df_start = df[df["annee"] == start_year]
     df_end = df[df["annee"] == end_year]
@@ -197,14 +204,17 @@ def calculate_historical_trend(
     else:
         croissance_annuelle = 0.0
     
-    # Extrapoler vers 2026 (2 ans après 2024)
-    facteur_2026 = ((1 + croissance_annuelle) ** 2 - 1) * 100
+    # Extrapoler vers l'année cible
+    years_ahead = max(0, target_year - end_year)
+    facteur_cible = ((1 + croissance_annuelle) ** years_ahead - 1) * 100
     
     return {
         "tendance_annuelle_pct": croissance_annuelle * 100,
-        "facteur_2026_pct": facteur_2026,
+        "facteur_2026_pct": facteur_cible,
         "adm_moyenne_start": adm_start,
         "adm_moyenne_end": adm_end,
+        "end_year": end_year,
+        "target_year": target_year,
     }
 
 
