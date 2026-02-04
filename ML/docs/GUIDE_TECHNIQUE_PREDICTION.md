@@ -146,6 +146,56 @@ La contrainte “≤ 10 %” doit être attachée explicitement à la métrique 
 
 ---
 
+## 10bis. Modèle Prophet (prévisions multi-jours)
+
+Le projet inclut un pipeline dédié **Prophet** pour la prévision **par date**
+(pas J+4). Il est utilisé uniquement pour l’onglet multi-jours dans l’app.
+
+### Entraînement
+
+Depuis la racine du repo :
+
+```bash
+python tools/train_poc.py
+```
+
+Entraîner **uniquement Prophet** :
+
+```bash
+python tools/train_poc.py --prophet-only
+```
+
+Pour lancer un **grid tuning** simple :
+
+```bash
+python tools/train_poc.py --prophet-only --tune
+```
+
+Artefacts générés dans `ml/artifacts/` :
+- `prophet.joblib` : export joblib (contient JSON + regressseurs)
+- `metrics.json` : entrée `"prophet"` ajoutée
+
+### Régressseurs
+
+Prophet utilise :
+- températures, indices, vacances (numériques)
+- one‑hot météo / événements
+- **vacances + événements** en tant que **holidays Prophet**
+ - **régressseurs hospitaliers** (lits/occupation/personnel)
+
+Hyperparamètres appliqués :
+- `seasonality_mode="multiplicative"`
+- `changepoint_prior_scale=0.1`
+- `seasonality_prior_scale=10.0`
+- saisonnalité mensuelle (période 30.5, fourier_order 5)
+
+Pour les **valeurs futures**, le pipeline applique :
+- moyennes mensuelles pour les variables numériques,
+- mode mensuel pour la météo,
+- événements = “Aucun” (fallback sur le mode global si “Aucun” absent).
+
+---
+
 ## 11. Points d’attention
 
 - **Fichier CSV introuvable** : vérifier `ml/data/raw` et le nom du fichier.

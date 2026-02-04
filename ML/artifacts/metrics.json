@@ -26,7 +26,17 @@
   },
   "gradient_boosting": {
     "mae": 57.777973739547924,
-    "mape": 18.89192637723563,
+    "mape": 18.891926377235635,
     "smape": 17.299253231154214
+  },
+  "prophet": {
+    "mae": 55.118537608623484,
+    "mape": 17.96136201719816,
+    "smape": 16.5762731505716
+  },
+  "prophet_params": {
+    "seasonality_mode": "multiplicative",
+    "changepoint_prior_scale": 0.1,
+    "seasonality_prior_scale": 10.0
   }
 }
