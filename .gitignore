@@ -13,3 +13,6 @@ wheels/
 .DS_Store
 
 .early.coverage
+
+# Données de prédiction (générées à l'exécution)
+data/last_prediction_for_recommendations.json
