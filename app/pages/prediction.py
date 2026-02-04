@@ -27,10 +27,7 @@ try:
         forecast_prophet,
         evaluate_knn_quality,
     )
-except Exception as e:
-    print(f"[ERREUR] Import smartcare_model échoué: {e}")
-    import traceback
-    traceback.print_exc()
+except Exception:
     prepare_prediction_row = None
     apply_overrides = None
     predict_from_features = None
@@ -48,15 +45,13 @@ def _load_metrics_json():
     """Charge les métriques du modèle depuis ML/artifacts/metrics.json."""
     try:
         base = Path(__file__).resolve().parent.parent.parent
-        path = base / "ml" / "artifacts" / "metrics.json"
-        if path.exists():
-            with open(path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            print(f"[Prédiction] Métriques chargées depuis {path} ({len(data)} modèles/baselines)")
-            return data
-        print(f"[Prédiction] Fichier metrics.json non trouvé: {path}")
-    except Exception as e:
-        print(f"[Prédiction] Erreur chargement metrics.json: {e}")
+        for folder in ("ml", "ML"):
+            path = base / folder / "artifacts" / "metrics.json"
+            if path.exists():
+                with open(path, "r", encoding="utf-8") as f:
+                    return json.load(f)
+    except Exception:
+        pass
     return None
 
 
@@ -73,21 +68,6 @@ def show(df, model, model_available):
         and apply_overrides is not None
         and predict_from_features is not None
     )
-    
-    # Debug pour comprendre pourquoi pipeline_ready est False
-    if model_available and not pipeline_ready:
-        st.warning(f"""
-        🔍 Debug pipeline_ready:
-        - model_available: {model_available}
-        - isinstance(model, dict): {isinstance(model, dict)}
-        - "feature_cols" in model: {"feature_cols" in model if isinstance(model, dict) else "N/A"}
-        - "feature_df" in model: {"feature_df" in model if isinstance(model, dict) else "N/A"}
-        - "model" in model: {"model" in model if isinstance(model, dict) else "N/A"}
-        - prepare_prediction_row: {prepare_prediction_row is not None}
-        - apply_overrides: {apply_overrides is not None}
-        - predict_from_features: {predict_from_features is not None}
-        """)
-    
     
     st.markdown('<p class="main-header">Prédiction des Besoins Hospitaliers</p>', unsafe_allow_html=True)
     
@@ -361,6 +341,15 @@ def show(df, model, model_available):
 
                 elif pipeline_ready:
                     try:
+                        selected_model = model["model"]
+                        selected_feature_cols = model["feature_cols"]
+                        if load_artifacts is not None and selected_model_key != "gradient_boosting":
+                            try:
+                                selected_model, selected_feature_cols = load_artifacts(
+                                    model_name=selected_model_key
+                                )
+                            except Exception:
+                                pass
                         meteo_override = None if meteo == "Aucun" else meteo
                         event_override = None if evenement == "Aucun" else evenement
                         
@@ -518,7 +507,31 @@ def show(df, model, model_available):
                 # Calculs dérivés
                 pred_hospitalisations = int(pred_admissions * 0.65)
                 pred_sorties = int(pred_admissions * 0.95)
-                pred_lits_occupes = int(1650 * pred_occupation)
+                lits_total = int(df['lits_total'].iloc[-1]) if 'lits_total' in df.columns else 1650
+                pred_lits_occupes = int(lits_total * pred_occupation)
+                ratio_patient_staff = 3.5
+                staff_needed = int(pred_lits_occupes / ratio_patient_staff)
+                
+                # Stocker les résultats pour la page Recommandations (session + fichier)
+                pred_for_rec = {
+                    'mode': 'single',
+                    'pred_date': pred_date,
+                    'day_of_week_fr': day_of_week_fr.get(day_of_week, day_of_week),
+                    'pred_admissions': pred_admissions,
+                    'pred_urgences': pred_urgences,
+                    'pred_occupation': pred_occupation,
+                    'pred_lits_occupes': pred_lits_occupes,
+                    'staff_needed': staff_needed,
+                    'lits_total': lits_total,
+                }
+                st.session_state.prediction_for_recommendations = pred_for_rec
+                try:
+                    from prediction_store import save_prediction_for_recommendations
+                    ok = save_prediction_for_recommendations(pred_for_rec)
+                    if ok:
+                        st.toast("Prédiction sauvegardée pour la page Recommandations", icon="💾")
+                except Exception:
+                    pass
                 
                 # Affichage des résultats
                 st.success("✅ Prédiction calculée")
@@ -573,8 +586,8 @@ def show(df, model, model_available):
                 
                 with col1:
                     st.markdown("#### 🛏️ Besoins en lits")
-                    st.metric("Lits occupés prévus", f"{pred_lits_occupes} / 1650")
-                    st.metric("Lits disponibles", f"{1650 - pred_lits_occupes}")
+                    st.metric("Lits occupés prévus", f"{pred_lits_occupes} / {lits_total}")
+                    st.metric("Lits disponibles", f"{lits_total - pred_lits_occupes}")
                     
                     if pred_occupation > 0.85:
                         st.error(f"⚠️ Risque de saturation ({pred_occupation*100:.1f}%)")
@@ -606,70 +619,7 @@ def show(df, model, model_available):
                     else:
                         st.success("✅ Effectifs suffisants")
                 
-                # Intervalle de confiance
-                st.markdown("---")
-                st.subheader("📏 Intervalle de confiance")
-                
-                # Calcul IC (95%)
-                std_admissions = df['nombre_admissions'].std()
-                ic_low_adm = max(0, pred_admissions - 1.96 * std_admissions)
-                ic_high_adm = pred_admissions + 1.96 * std_admissions
-                
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    fig = go.Figure()
-                    
-                    fig.add_trace(go.Scatter(
-                        x=['Prédiction'],
-                        y=[pred_admissions],
-                        mode='markers',
-                        marker=dict(size=15, color='red'),
-                        name='Prédiction',
-                        error_y=dict(
-                            type='data',
-                            symmetric=False,
-                            array=[ic_high_adm - pred_admissions],
-                            arrayminus=[pred_admissions - ic_low_adm]
-                        )
-                    ))
-                    
-                    fig.update_layout(
-                        title="Admissions (IC 95%)",
-                        yaxis_title="Nombre",
-                        height=300
-                    )
-                    
-                    st.plotly_chart(fig, width="stretch")
-                    st.caption(f"Intervalle: [{ic_low_adm:.0f} - {ic_high_adm:.0f}]")
-                
-                with col2:
-                    # Distribution historique comparée
-                    fig = go.Figure()
-                    
-                    hist_data = df[df['jour_semaine'] == day_of_week_fr.get(day_of_week, day_of_week)]['nombre_admissions']
-                    
-                    fig.add_trace(go.Histogram(
-                        x=hist_data,
-                        name='Historique',
-                        opacity=0.7,
-                        marker_color='lightblue'
-                    ))
-                    
-                    fig.add_vline(
-                        x=pred_admissions,
-                        line_dash="dash",
-                        line_color="red",
-                        annotation_text="Prédiction"
-                    )
-                    
-                    fig.update_layout(
-                        title=f"Distribution historique ({day_of_week_fr.get(day_of_week, day_of_week)})",
-                        xaxis_title="Admissions",
-                        height=300
-                    )
-                    
-                    st.plotly_chart(fig, width="stretch")
+                st.info("💡 Allez sur la page **Recommandations** pour comparer ces prédictions à vos ressources actuelles (médecins, lits) et obtenir des recommandations personnalisées.")
     
     # ========================================
     # TAB 2: Prédiction Multi-jours
@@ -695,19 +645,7 @@ def show(df, model, model_available):
                 value=30
             )
         
-        # Options avancées
-        with st.expander("⚙️ Options avancées"):
-            include_seasonality = st.checkbox("Inclure la saisonnalité", value=True)
-            include_trend = st.checkbox("Inclure la tendance", value=True)
-            confidence_level = st.slider("Niveau de confiance (%)", 80, 99, 95)
-        
         if st.button("🚀 Générer les Prédictions", type="primary", width="stretch"):
-            
-            log_lines = []
-            def _log(msg):
-                log_lines.append(msg)
-                print(f"[Prédiction Multi-jours] {msg}")
-            
             with st.spinner(f"Calcul des prédictions pour {n_days} jours..."):
                 
                 predictions = []
@@ -716,7 +654,6 @@ def show(df, model, model_available):
                 urg_ratio = df["nombre_passages_urgences"].mean() / mean_admissions
                 mean_occupation = df["taux_occupation_lits"].mean() * 100
                 
-                _log(f"Plage: {start_date} → {n_days} jours | pipeline_ready = {pipeline_ready}")
 
                 prophet_ready = (
                     build_prophet_future_frame is not None
@@ -726,7 +663,6 @@ def show(df, model, model_available):
 
                 if selected_model_key == "prophet" and prophet_ready:
                     try:
-                        _log("Chargement du modèle Prophet...")
                         prophet_model, prophet_regressors = load_prophet_artifacts()
                         future_df = build_prophet_future_frame(dates, df, prophet_regressors)
                         forecast = forecast_prophet(prophet_model, future_df)
@@ -740,10 +676,9 @@ def show(df, model, model_available):
                                 "urgences": pred_urg,
                                 "occupation": pred_occ,
                             })
-                        _log(f"Prophet OK: {len(predictions)} prédictions")
                         st.info("✅ Prophet utilisé (multi-jours).")
-                    except Exception as e:
-                        _log(f"ERREUR Prophet: {e} → fallback")
+                    except Exception:
+                        pass
                 
                 if (
                     pipeline_ready
@@ -752,7 +687,6 @@ def show(df, model, model_available):
                 ):
                     # Utiliser le modèle ML : dernière ligne de features + overrides météo selon le mois (variation)
                     try:
-                        _log("Chargement base_row (dernière période connue)...")
                         selected_model = model["model"]
                         selected_feature_cols = model["feature_cols"]
                         if (
@@ -771,7 +705,6 @@ def show(df, model, model_available):
                             selected_feature_cols,
                             target_date=None,
                         )
-                        _log(f"base_row chargé (shape {base_row.shape})")
 
                         last_date = model["feature_df"]["date"].max()
                         temp_mean_by_month = df.groupby(df["date"].dt.month)["temperature_moyenne"].mean().to_dict()
@@ -899,18 +832,13 @@ def show(df, model, model_available):
                                 "urgences": pred_urg,
                                 "occupation": pred_occ,
                             })
-                        _log(f"ML OK: {len(predictions)} prédictions (features datées + k-NN si hors historique)")
                         st.info("🤖 Prédictions ML : features datées quand disponibles, sinon k-NN pour synthétiser les lags.")
                     except Exception as e:
-                        _log(f"ERREUR ML: {e} → passage au modèle statistique")
-                        import traceback
-                        traceback.print_exc()
                         st.warning(f"Modèle ML indisponible pour cette plage : {e}. Passage au modèle statistique.")
                         predictions = []
                 
                 if not predictions:
                     # Fallback : modèle statistique
-                    _log("Utilisation du modèle statistique (predict_with_stats)")
                     for date in dates:
                         day_name = date.strftime('%A')
                         day_fr = {
@@ -941,15 +869,35 @@ def show(df, model, model_available):
                 
                 pred_df = pd.DataFrame(predictions)
                 
-                # Affichage
+                # Stocker les résultats pour la page Recommandations
+                lits_total = int(df['lits_total'].iloc[-1]) if 'lits_total' in df.columns else 1650
+                ratio_patient_staff = 3.5
+                pred_df['lits_occupes'] = (pred_df['occupation'] / 100 * lits_total).astype(int)
+                pred_df['staff_needed'] = (pred_df['lits_occupes'] / ratio_patient_staff).astype(int)
+                peak_lits = pred_df['lits_occupes'].max()
+                peak_staff = pred_df['staff_needed'].max()
+                
+                pred_for_rec = {
+                    'mode': 'multi',
+                    'start_date': start_date,
+                    'n_days': n_days,
+                    'pred_df': pred_df,
+                    'lits_total': lits_total,
+                    'peak_lits_occupes': int(peak_lits),
+                    'peak_staff_needed': int(peak_staff),
+                    'mean_lits_occupes': int(pred_df['lits_occupes'].mean()),
+                    'mean_staff_needed': int(pred_df['staff_needed'].mean()),
+                }
+                st.session_state.prediction_for_recommendations = pred_for_rec
+                try:
+                    from prediction_store import save_prediction_for_recommendations
+                    ok = save_prediction_for_recommendations(pred_for_rec)
+                    if ok:
+                        st.toast("Prédiction sauvegardée pour la page Recommandations", icon="💾")
+                except Exception:
+                    pass
+                
                 st.success(f"✅ {n_days} jours prédits")
-                
-                # Logs (terminal + interface)
-                if log_lines:
-                    with st.expander("🔍 Logs de la prédiction (terminal + détail)", expanded=True):
-                        st.text("\n".join(log_lines))
-                        st.caption("Les mêmes messages s'affichent dans le terminal Streamlit.")
-                
                 st.markdown("---")
                 
                 # Graphiques
@@ -1060,6 +1008,8 @@ def show(df, model, model_available):
                     file_name=f"predictions_{start_date.strftime('%Y%m%d')}_{n_days}j.csv",
                     mime="text/csv"
                 )
+                
+                st.info("💡 Allez sur la page **Recommandations** pour comparer ces prédictions à vos ressources actuelles et obtenir des recommandations personnalisées.")
     
     # ========================================
     # TAB 3: Upload Modèle

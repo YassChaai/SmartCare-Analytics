@@ -13,6 +13,10 @@ import os
 from pathlib import Path
 import sys
 
+# Ajouter la racine du projet pour importer app.prediction_store
+_project_root = Path(__file__).resolve().parent.parent
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
 # Ajouter le dossier pages au path pour pouvoir importer les modules
 sys.path.insert(0, str(Path(__file__).parent / "pages"))
 # Ajouter le dossier ml pour le package smartcare_model
