@@ -30,8 +30,15 @@ def save_artifacts(
     artifacts_dir.mkdir(parents=True, exist_ok=True)
     with open(artifacts_dir / "feature_columns.json", "w") as f:
         json.dump(feature_cols, f, indent=2)
-    with open(artifacts_dir / "metrics.json", "w") as f:
-        json.dump(results, f, indent=2)
+    metrics_path = artifacts_dir / "metrics.json"
+    if metrics_path.exists():
+        with open(metrics_path, "r") as f:
+            existing = json.load(f)
+    else:
+        existing = {}
+    existing.update(results)
+    with open(metrics_path, "w") as f:
+        json.dump(existing, f, indent=2)
     for name, model in trained_models.items():
         joblib.dump(model, artifacts_dir / f"{name}.joblib")
 

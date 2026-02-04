@@ -21,6 +21,10 @@ try:
         find_similar_days,
         compute_synthetic_lags,
         calculate_historical_trend,
+        load_artifacts,
+        build_prophet_future_frame,
+        load_prophet_artifacts,
+        forecast_prophet,
     )
 except Exception as e:
     print(f"[ERREUR] Import smartcare_model échoué: {e}")
@@ -32,13 +36,17 @@ except Exception as e:
     find_similar_days = None
     compute_synthetic_lags = None
     calculate_historical_trend = None
+    load_artifacts = None
+    build_prophet_future_frame = None
+    load_prophet_artifacts = None
+    forecast_prophet = None
 
 
 def _load_metrics_json():
     """Charge les métriques du modèle depuis ML/artifacts/metrics.json."""
     try:
         base = Path(__file__).resolve().parent.parent.parent
-        path = base / "ML" / "artifacts" / "metrics.json"
+        path = base / "ml" / "artifacts" / "metrics.json"
         if path.exists():
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -95,13 +103,28 @@ def show(df, model, model_available):
             st.info("📁 Placez `ml/artifacts/gradient_boosting.joblib` + `feature_columns.json` + `data/raw/` dans le projet")
     
     st.markdown("---")
-    
+
+    model_options = ["Gradient Boosting", "Random Forest", "Prophet"]
+    model_choice = st.selectbox(
+        "Modèle de prédiction",
+        model_options,
+        index=0,
+        key="prediction_model_choice",
+        help="Choisissez le modèle utilisé pour la prédiction.",
+    )
+    model_key_map = {
+        "Gradient Boosting": "gradient_boosting",
+        "Random Forest": "random_forest",
+        "Prophet": "prophet",
+    }
+    selected_model_key = model_key_map[model_choice]
+
     # Métriques du modèle et limites (MAE / MAPE + disclaimer)
     metrics_data = _load_metrics_json()
-    model_name = "gradient_boosting"
-    if metrics_data and model_name in metrics_data:
+    metrics_key = "prophet" if selected_model_key == "prophet" else selected_model_key
+    if metrics_data and metrics_key in metrics_data:
         with st.expander("📊 Performance du modèle et limites", expanded=False):
-            m = metrics_data[model_name]
+            m = metrics_data[metrics_key]
             col1, col2, col3 = st.columns(3)
             with col1:
                 st.metric("MAE (test)", f"{m.get('mae', 0):.1f}")
@@ -252,11 +275,80 @@ def show(df, model, model_available):
         if st.button("🚀 Calculer la Prédiction", type="primary", use_container_width=True):
             
             with st.spinner("Calcul en cours..."):
-                
-                if pipeline_ready:
+                if (
+                    selected_model_key == "prophet"
+                    and build_prophet_future_frame is not None
+                    and load_prophet_artifacts is not None
+                    and forecast_prophet is not None
+                ):
+                    st.info("🤖 Utilisation du modèle Prophet")
+                    try:
+                        prophet_model, prophet_regressors = load_prophet_artifacts()
+                        future_df = build_prophet_future_frame([pred_date], df, prophet_regressors)
+                        future_df = future_df.copy()
+
+                        if "temperature_moyenne" in prophet_regressors:
+                            future_df["temperature_moyenne"] = temperature
+                        if "temperature_min" in prophet_regressors:
+                            future_df["temperature_min"] = temperature
+                        if "temperature_max" in prophet_regressors:
+                            future_df["temperature_max"] = temperature
+                        if "vacances_scolaires" in prophet_regressors:
+                            future_df["vacances_scolaires"] = 1 if vacances else 0
+
+                        meteo_cols = [c for c in prophet_regressors if c.startswith("meteo_")]
+                        if meteo_cols:
+                            for col in meteo_cols:
+                                future_df[col] = 0
+                            if meteo != "Aucun":
+                                meteo_col = f"meteo_{meteo}"
+                                if meteo_col in future_df.columns:
+                                    future_df[meteo_col] = 1
+
+                        event_cols = [c for c in prophet_regressors if c.startswith("event_")]
+                        if event_cols:
+                            for col in event_cols:
+                                future_df[col] = 0
+                            if evenement != "Aucun":
+                                event_col = f"event_{evenement}"
+                                if event_col in future_df.columns:
+                                    future_df[event_col] = 1
+                            else:
+                                event_default = "event_Aucun"
+                                if event_default in future_df.columns:
+                                    future_df[event_default] = 1
+
+                        forecast = forecast_prophet(prophet_model, future_df)
+                        pred_admissions = max(0.0, float(forecast["yhat"].iloc[0]))
+                        urg_ratio = df["nombre_passages_urgences"].mean() / df["nombre_admissions"].mean()
+                        pred_urgences = pred_admissions * urg_ratio
+                        pred_occupation = df["taux_occupation_lits"].mean()
+                    except Exception as e:
+                        st.error(f"Erreur avec Prophet : {e}")
+                        st.warning("Passage au modèle ML/statistique")
+                        pred_admissions, pred_urgences, pred_occupation = predict_with_stats(
+                            df, day_of_week_fr.get(day_of_week, day_of_week),
+                            saison, vacances, temperature, evenement
+                        )
+
+                elif pipeline_ready:
                     try:
                         meteo_override = None if meteo == "Aucun" else meteo
                         event_override = None if evenement == "Aucun" else evenement
+
+                        selected_model = model["model"]
+                        selected_feature_cols = model["feature_cols"]
+                        if (
+                            load_artifacts is not None
+                            and selected_model_key in ("gradient_boosting", "random_forest")
+                            and selected_model_key != "gradient_boosting"
+                        ):
+                            try:
+                                selected_model, selected_feature_cols = load_artifacts(
+                                    model_name=selected_model_key
+                                )
+                            except Exception as e:
+                                st.warning(f"Modèle {selected_model_key} indisponible, fallback gradient_boosting: {e}")
                         
                         # Vérifier si la date est hors historique (> 30 jours après dernière date)
                         last_date = model["feature_df"]["date"].max()
@@ -290,7 +382,7 @@ def show(df, model, model_available):
                             # Créer une ligne de prédiction avec lags synthétiques
                             row = prepare_prediction_row(
                                 model["feature_df"],
-                                model["feature_cols"],
+                                selected_feature_cols,
                                 target_date=None
                             )
                             
@@ -303,13 +395,13 @@ def show(df, model, model_available):
                             try:
                                 row = prepare_prediction_row(
                                     model["feature_df"],
-                                    model["feature_cols"],
+                                    selected_feature_cols,
                                     target_date=pred_date
                                 )
                             except Exception:
                                 row = prepare_prediction_row(
                                     model["feature_df"],
-                                    model["feature_cols"],
+                                    selected_feature_cols,
                                     target_date=None
                                 )
                                 st.warning("⚠️ Date exacte non trouvée, utilisation de la dernière date disponible")
@@ -317,7 +409,7 @@ def show(df, model, model_available):
                         # Appliquer les overrides météo/événement
                         row = apply_overrides(
                             row,
-                            model["feature_cols"],
+                            selected_feature_cols,
                             meteo=meteo_override,
                             event=event_override
                         )
@@ -325,8 +417,8 @@ def show(df, model, model_available):
                         # Prédiction
                         result = predict_from_features(
                             row,
-                            model["model"],
-                            model["feature_cols"],
+                            selected_model,
+                            selected_feature_cols,
                             safety_margin=0.10
                         )
 
@@ -580,14 +672,57 @@ def show(df, model, model_available):
                 mean_occupation = df["taux_occupation_lits"].mean()
                 
                 _log(f"Plage: {start_date} → {n_days} jours | pipeline_ready = {pipeline_ready}")
+
+                prophet_ready = (
+                    build_prophet_future_frame is not None
+                    and load_prophet_artifacts is not None
+                    and forecast_prophet is not None
+                )
+
+                if selected_model_key == "prophet" and prophet_ready:
+                    try:
+                        _log("Chargement du modèle Prophet...")
+                        prophet_model, prophet_regressors = load_prophet_artifacts()
+                        future_df = build_prophet_future_frame(dates, df, prophet_regressors)
+                        forecast = forecast_prophet(prophet_model, future_df)
+                        for row in forecast.itertuples(index=False):
+                            pred_adm = max(0.0, float(row.yhat))
+                            pred_urg = pred_adm * urg_ratio
+                            predictions.append({
+                                "date": row.ds,
+                                "admissions": pred_adm,
+                                "urgences": pred_urg,
+                                "occupation": mean_occupation * 100,
+                            })
+                        _log(f"Prophet OK: {len(predictions)} prédictions")
+                        st.info("✅ Prophet utilisé (multi-jours).")
+                    except Exception as e:
+                        _log(f"ERREUR Prophet: {e} → fallback")
                 
-                if pipeline_ready:
+                if (
+                    pipeline_ready
+                    and not predictions
+                    and selected_model_key in ("gradient_boosting", "random_forest")
+                ):
                     # Utiliser le modèle ML : dernière ligne de features + overrides météo selon le mois (variation)
                     try:
                         _log("Chargement base_row (dernière période connue)...")
+                        selected_model = model["model"]
+                        selected_feature_cols = model["feature_cols"]
+                        if (
+                            load_artifacts is not None
+                            and selected_model_key != "gradient_boosting"
+                        ):
+                            try:
+                                selected_model, selected_feature_cols = load_artifacts(
+                                    model_name=selected_model_key
+                                )
+                            except Exception as e:
+                                st.warning(f"Modèle {selected_model_key} indisponible, fallback gradient_boosting: {e}")
+
                         base_row = prepare_prediction_row(
                             model["feature_df"],
-                            model["feature_cols"],
+                            selected_feature_cols,
                             target_date=None,
                         )
                         _log(f"base_row chargé (shape {base_row.shape})")
@@ -600,14 +735,14 @@ def show(df, model, model_available):
                             )
                             row = apply_overrides(
                                 base_row.copy(),
-                                model["feature_cols"],
+                                selected_feature_cols,
                                 meteo=meteo_override,
                                 event=None,
                             )
                             result = predict_from_features(
                                 row,
-                                model["model"],
-                                model["feature_cols"],
+                                selected_model,
+                                selected_feature_cols,
                                 safety_margin=0.10,
                             )
                             pred_adm = result["prediction"]

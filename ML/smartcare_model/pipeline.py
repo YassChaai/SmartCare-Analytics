@@ -20,6 +20,13 @@ from smartcare_model.inference.similarity import (
     compute_synthetic_lags,
     find_similar_days,
 )
+from smartcare_model.prophet import (
+    build_prophet_future_frame,
+    build_prophet_train_frame,
+    forecast_prophet,
+    load_prophet_artifacts,
+    train_prophet_model,
+)
 from smartcare_model.training.trainer import train_models
 
 BASE_DIR = ML_ROOT
@@ -32,16 +39,21 @@ __all__ = [
     "RAW_DIR",
     "TARGET_COL",
     "apply_overrides",
+    "build_prophet_future_frame",
+    "build_prophet_train_frame",
     "build_feature_dataframe",
     "calculate_historical_trend",
     "compute_synthetic_lags",
     "find_similar_days",
+    "forecast_prophet",
     "load_artifacts",
     "load_feature_columns",
+    "load_prophet_artifacts",
     "load_raw_dataframe",
     "predict_from_features",
     "prepare_prediction_row",
     "save_artifacts",
+    "train_prophet_model",
     "train_models",
     "_select_feature_columns",
 ]
