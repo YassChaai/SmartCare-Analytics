@@ -1,6 +1,6 @@
 import argparse
 
-from smartcare_model.pipeline import (
+from ml.smartcare_model.pipeline import (
     DEFAULT_MODEL_NAME,
     apply_overrides,
     build_feature_dataframe,
