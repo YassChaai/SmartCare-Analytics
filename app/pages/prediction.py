@@ -252,14 +252,22 @@ def show(df, model, model_available):
         if pipeline_ready and calculate_historical_trend is not None:
             st.markdown("### 🔮 Ajustement Tendance Temporelle")
             
-            # Calculer la tendance historique
-            trend_data = calculate_historical_trend(model["feature_df"])
+            # Calculer la tendance historique (jusqu'à la dernière année disponible)
+            max_year = int(model["feature_df"]["annee"].max())
+            trend_data = calculate_historical_trend(
+                model["feature_df"],
+                end_year=max_year,
+                target_year=max_year,
+            )
             
             col1, col2 = st.columns([2, 1])
             
             with col1:
                 st.info(f"📊 **Tendance historique détectée** : {trend_data['facteur_2026_pct']:+.1f}%")
-                st.caption(f"Basée sur l'évolution 2022 ({trend_data['adm_moyenne_start']:.0f} adm/j) → 2024 ({trend_data['adm_moyenne_end']:.0f} adm/j)")
+                st.caption(
+                    f"Basée sur l'évolution 2022 ({trend_data['adm_moyenne_start']:.0f} adm/j) → "
+                    f"{trend_data.get('end_year', max_year)} ({trend_data['adm_moyenne_end']:.0f} adm/j)"
+                )
             
             with col2:
                 utiliser_auto = st.checkbox("Utiliser tendance auto", value=True, key="use_auto_trend")
@@ -280,9 +288,12 @@ def show(df, model, model_available):
             # Détail du calcul (expander optionnel)
             with st.expander("📖 Comment est calculée la tendance ?"):
                 st.write(f"- **Admissions moyennes 2022** : {trend_data['adm_moyenne_start']:.0f} par jour")
-                st.write(f"- **Admissions moyennes 2024** : {trend_data['adm_moyenne_end']:.0f} par jour")
+                st.write(f"- **Admissions moyennes {trend_data.get('end_year', max_year)}** : {trend_data['adm_moyenne_end']:.0f} par jour")
                 st.write(f"- **Croissance annuelle** : {trend_data['tendance_annuelle_pct']:.2f}%")
-                st.write(f"- **Extrapolation vers 2026** (2 ans) : {trend_data['facteur_2026_pct']:+.1f}%")
+                st.write(
+                    f"- **Extrapolation vers {trend_data.get('target_year', max_year)}** : "
+                    f"{trend_data['facteur_2026_pct']:+.1f}%"
+                )
                 st.caption("La tendance est appliquée après la prédiction du modèle ML pour tenir compte de l'évolution temporelle.")
         else:
             facteur_tendance = 0.0
@@ -415,7 +426,7 @@ def show(df, model, model_available):
                             # Créer une ligne de prédiction avec lags synthétiques
                             row = prepare_prediction_row(
                                 model["feature_df"],
-                                selected_feature_cols,
+                                model["feature_cols"],
                                 target_date=None
                             )
                             
@@ -428,13 +439,13 @@ def show(df, model, model_available):
                             try:
                                 row = prepare_prediction_row(
                                     model["feature_df"],
-                                    selected_feature_cols,
+                                    model["feature_cols"],
                                     target_date=pred_date
                                 )
                             except Exception:
                                 row = prepare_prediction_row(
                                     model["feature_df"],
-                                    selected_feature_cols,
+                                    model["feature_cols"],
                                     target_date=None
                                 )
                                 st.warning("⚠️ Date exacte non trouvée, utilisation de la dernière date disponible")
@@ -442,7 +453,7 @@ def show(df, model, model_available):
                         # Appliquer les overrides météo/événement
                         row = apply_overrides(
                             row,
-                            selected_feature_cols,
+                            model["feature_cols"],
                             meteo=meteo_override,
                             event=event_override
                         )
@@ -450,8 +461,8 @@ def show(df, model, model_available):
                         # Prédiction
                         result = predict_from_features(
                             row,
-                            selected_model,
-                            selected_feature_cols,
+                            model["model"],
+                            model["feature_cols"],
                             safety_margin=0.10
                         )
 
@@ -701,8 +712,9 @@ def show(df, model, model_available):
                 
                 predictions = []
                 dates = pd.date_range(start=start_date, periods=n_days, freq='D')
-                urg_ratio = df["nombre_passages_urgences"].mean() / max(df["nombre_admissions"].mean(), 1)
-                mean_occupation = df["taux_occupation_lits"].mean()
+                mean_admissions = max(df["nombre_admissions"].mean(), 1)
+                urg_ratio = df["nombre_passages_urgences"].mean() / mean_admissions
+                mean_occupation = df["taux_occupation_lits"].mean() * 100
                 
                 _log(f"Plage: {start_date} → {n_days} jours | pipeline_ready = {pipeline_ready}")
 
@@ -721,11 +733,12 @@ def show(df, model, model_available):
                         for row in forecast.itertuples(index=False):
                             pred_adm = max(0.0, float(row.yhat))
                             pred_urg = pred_adm * urg_ratio
+                            pred_occ = np.clip(mean_occupation * (pred_adm / mean_admissions), 50, 98)
                             predictions.append({
                                 "date": row.ds,
                                 "admissions": pred_adm,
                                 "urgences": pred_urg,
-                                "occupation": mean_occupation * 100,
+                                "occupation": pred_occ,
                             })
                         _log(f"Prophet OK: {len(predictions)} prédictions")
                         st.info("✅ Prophet utilisé (multi-jours).")
@@ -795,7 +808,7 @@ def show(df, model, model_available):
                             if target_date <= last_date:
                                 row = prepare_prediction_row(
                                     model["feature_df"],
-                                    model["feature_cols"],
+                                    selected_feature_cols,
                                     target_date=target_date,
                                 )
                             else:
@@ -865,7 +878,7 @@ def show(df, model, model_available):
                                     row["mult_vacances"] = 0.90 if vacances else 1.00
 
                             row = apply_overrides(
-                                base_row.copy(),
+                                row,
                                 selected_feature_cols,
                                 meteo=meteo_override,
                                 event=None,
@@ -879,11 +892,12 @@ def show(df, model, model_available):
                             )
                             pred_adm = result["prediction"]
                             pred_urg = pred_adm * urg_ratio
+                            pred_occ = np.clip(mean_occupation * (pred_adm / mean_admissions), 50, 98)
                             predictions.append({
                                 "date": date,
                                 "admissions": pred_adm,
                                 "urgences": pred_urg,
-                                "occupation": mean_occupation * 100,
+                                "occupation": pred_occ,
                             })
                         _log(f"ML OK: {len(predictions)} prédictions (features datées + k-NN si hors historique)")
                         st.info("🤖 Prédictions ML : features datées quand disponibles, sinon k-NN pour synthétiser les lags.")
@@ -916,11 +930,12 @@ def show(df, model, model_available):
                         pred_adm, pred_urg, pred_occ = predict_with_stats(
                             df, day_fr, saison, False, 15.0, 'Aucun'
                         )
+                        pred_occ = np.clip(mean_occupation * (pred_adm / mean_admissions), 50, 98)
                         predictions.append({
                             'date': date,
                             'admissions': pred_adm,
                             'urgences': pred_urg,
-                            'occupation': pred_occ * 100
+                            'occupation': pred_occ
                         })
                     _log(f"Statistique OK: {len(predictions)} prédictions (predict_with_stats)")
                 
