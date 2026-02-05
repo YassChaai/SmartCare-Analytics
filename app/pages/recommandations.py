@@ -8,6 +8,8 @@ import numpy as np
 import plotly.graph_objects as go
 from datetime import timedelta
 
+from pages.ui_helpers import metric_with_info, render_title
+
 
 def _get_reference_single_day(df, pred_date, day_of_week_fr):
     """Récupère la donnée du même jour de la semaine précédente (ex: Lundi 12 → Lundi 5)."""
@@ -58,14 +60,15 @@ def _compute_staff_proportions(ref_row_or_df):
     return total_med / total, total_inf / total, total_aides / total
 
 
-def _render_kpi_with_ref(label, valeur_atteindre, valeur_reference, delta_ok_if_positive=False):
+def _render_kpi_with_ref(label, tooltip, valeur_atteindre, valeur_reference, delta_ok_if_positive=False):
     """Affiche un KPI avec valeur à atteindre et valeur de référence."""
     delta = valeur_atteindre - valeur_reference
     delta_str = f"{delta:+d}" if delta != 0 else "="
-    st.metric(
+    metric_with_info(
         label,
+        tooltip,
         f"{valeur_atteindre}",
-        delta=f"Réf. {valeur_reference} ({delta_str})"
+        delta=f"Réf. {valeur_reference} ({delta_str})",
     )
 
 
@@ -93,19 +96,43 @@ def _render_single_day(df, pred_data):
     pred_infirmiers = max(0, int(pred_staff * p_inf))
     pred_aides = max(0, int(pred_staff * p_aides))
 
-    st.markdown(f"#### Prédiction mono-jour : **{pd.to_datetime(pred_date).strftime('%d/%m/%Y')}** ({day_fr})")
+    render_title(
+        f"Prédiction mono-jour : {pd.to_datetime(pred_date).strftime('%d/%m/%Y')} ({day_fr})",
+        "Comparaison prédiction vs référence du même jour de semaine.",
+        heading="####",
+    )
     st.caption(f"Données de référence : {day_fr} {ref_date_str}")
     st.markdown("---")
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        _render_kpi_with_ref("🛏️ Lits occupés", pred_lits, ref_lits_occupes)
+        _render_kpi_with_ref(
+            "🛏️ Lits occupés",
+            "Lits occupés prévus vs référence (même jour semaine précédente).",
+            pred_lits,
+            ref_lits_occupes,
+        )
     with col2:
-        _render_kpi_with_ref("👨‍⚕️ Médecins", pred_medecins, ref_medecins)
+        _render_kpi_with_ref(
+            "👨‍⚕️ Médecins",
+            "Besoin estimé en médecins vs référence.",
+            pred_medecins,
+            ref_medecins,
+        )
     with col3:
-        _render_kpi_with_ref("👩‍⚕️ Infirmiers", pred_infirmiers, ref_infirmiers)
+        _render_kpi_with_ref(
+            "👩‍⚕️ Infirmiers",
+            "Besoin estimé en infirmiers vs référence.",
+            pred_infirmiers,
+            ref_infirmiers,
+        )
     with col4:
-        _render_kpi_with_ref("🩺 Aides-soignants", pred_aides, ref_aides)
+        _render_kpi_with_ref(
+            "🩺 Aides-soignants",
+            "Besoin estimé en aides-soignants vs référence.",
+            pred_aides,
+            ref_aides,
+        )
 
 
 def _render_multi_day(df, pred_data):
@@ -130,7 +157,11 @@ def _render_multi_day(df, pred_data):
 
     ref_date_str = f"{ref_df['date'].iloc[0].strftime('%d/%m/%Y')} → {ref_df['date'].iloc[-1].strftime('%d/%m/%Y')}"
 
-    st.markdown(f"#### Prédiction multi-jours : **{n_days} jours** à partir du {pd.to_datetime(start_date).strftime('%d/%m/%Y')}")
+    render_title(
+        f"Prédiction multi-jours : {n_days} jours à partir du {pd.to_datetime(start_date).strftime('%d/%m/%Y')}",
+        "Comparaison entre la période prédite et la période de référence précédente.",
+        heading="####",
+    )
     st.caption(f"Données de référence : {n_days} jours précédents ({ref_date_str})")
     st.markdown("---")
 
@@ -156,19 +187,47 @@ def _render_multi_day(df, pred_data):
     ref_inf_mean = int(ref_df['nb_infirmiers_disponibles'].mean())
     ref_aides_mean = int(ref_df['nb_aides_soignants_disponibles'].mean())
 
-    st.markdown("##### KPIs (moyennes sur la période)")
+    render_title(
+        "KPIs (moyennes sur la période)",
+        "Moyennes sur la période prédite vs période de référence.",
+        heading="#####",
+    )
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        _render_kpi_with_ref("🛏️ Lits occupés", pred_lits_mean, ref_lits_mean)
+        _render_kpi_with_ref(
+            "🛏️ Lits occupés",
+            "Moyenne des lits occupés sur la période.",
+            pred_lits_mean,
+            ref_lits_mean,
+        )
     with col2:
-        _render_kpi_with_ref("👨‍⚕️ Médecins", pred_med_mean, ref_med_mean)
+        _render_kpi_with_ref(
+            "👨‍⚕️ Médecins",
+            "Moyenne des besoins en médecins sur la période.",
+            pred_med_mean,
+            ref_med_mean,
+        )
     with col3:
-        _render_kpi_with_ref("👩‍⚕️ Infirmiers", pred_inf_mean, ref_inf_mean)
+        _render_kpi_with_ref(
+            "👩‍⚕️ Infirmiers",
+            "Moyenne des besoins en infirmiers sur la période.",
+            pred_inf_mean,
+            ref_inf_mean,
+        )
     with col4:
-        _render_kpi_with_ref("🩺 Aides-soignants", pred_aides_mean, ref_aides_mean)
+        _render_kpi_with_ref(
+            "🩺 Aides-soignants",
+            "Moyenne des besoins en aides-soignants sur la période.",
+            pred_aides_mean,
+            ref_aides_mean,
+        )
 
     st.markdown("---")
-    st.markdown("##### Évolution dans le temps : Prédiction vs Référence")
+    render_title(
+        "Évolution dans le temps : Prédiction vs Référence",
+        "Comparaison jour par jour entre la prédiction et la référence.",
+        heading="#####",
+    )
 
     dates_pred = pred_df['date'].dt.strftime('%d/%m')
     dates_ref = ref_df['date'].dt.strftime('%d/%m')
@@ -269,7 +328,11 @@ def show(df):
     """Affiche la page de recommandations (uniquement basée sur le modèle de prédiction)."""
 
     st.markdown('<p class="main-header">Recommandations Automatiques</p>', unsafe_allow_html=True)
-    st.markdown("### 💡 Comparaison Prédiction vs Données de référence")
+    render_title(
+        "💡 Comparaison Prédiction vs Données de référence",
+        "Compare la prédiction aux données historiques de référence.",
+        heading="###",
+    )
     st.markdown("---")
 
     pred_data = _load_prediction_data()

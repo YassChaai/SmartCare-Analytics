@@ -13,6 +13,8 @@ from pathlib import Path
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import LabelEncoder
 
+from pages.ui_helpers import metric_with_info, render_title
+
 try:
     from smartcare_model import (
         prepare_prediction_row,
@@ -109,13 +111,29 @@ def show(df, model, model_available):
             m = metrics_data[metrics_key]
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric("MAE (test)", f"{m.get('mae', 0):.1f}")
+                metric_with_info(
+                    "MAE (test)",
+                    "Erreur absolue moyenne sur l'ensemble de test.",
+                    f"{m.get('mae', 0):.1f}",
+                )
             with col2:
-                st.metric("RMSE (test)", f"{m.get('rmse', 0):.1f}")
+                metric_with_info(
+                    "RMSE (test)",
+                    "Erreur quadratique moyenne (sensibilité aux grosses erreurs).",
+                    f"{m.get('rmse', 0):.1f}",
+                )
             with col3:
-                st.metric("MAPE (test)", f"{m.get('mape', 0):.1f} %")
+                metric_with_info(
+                    "MAPE (test)",
+                    "Erreur moyenne en pourcentage (sur l'ensemble de test).",
+                    f"{m.get('mape', 0):.1f} %",
+                )
             with col4:
-                st.metric("SMAPE (test)", f"{m.get('smape', 0):.1f} %")
+                metric_with_info(
+                    "SMAPE (test)",
+                    "Erreur symétrique en pourcentage (pénalise moins les extrêmes).",
+                    f"{m.get('smape', 0):.1f} %",
+                )
             st.caption(
                 "Modèle entraîné sur 2022–2024. Pour les dates hors période, la prédiction s'appuie sur la "
                 "dernière période connue + contexte météo/événement."
@@ -132,7 +150,11 @@ def show(df, model, model_available):
     # TAB 1: Prédiction Simple
     # ========================================
     with tab1:
-        st.subheader("Prédiction pour une journée spécifique")
+        render_title(
+            "Prédiction pour une journée spécifique",
+            "Prédiction d'une date donnée avec contexte météo/événement.",
+            heading="###",
+        )
         
         col1, col2 = st.columns(2)
         
@@ -388,17 +410,29 @@ def show(df, model, model_available):
                                     col1, col2, col3 = st.columns(3)
                                     
                                     with col1:
-                                        st.metric("Distance moyenne", f"{knn_metrics['distance_moyenne']:.2f}")
+                                        metric_with_info(
+                                            "Distance moyenne",
+                                            "Distance moyenne entre le jour cible et les jours similaires.",
+                                            f"{knn_metrics['distance_moyenne']:.2f}",
+                                        )
                                         st.caption(f"Min: {knn_metrics['distance_min']:.2f} | Max: {knn_metrics['distance_max']:.2f}")
                                     
                                     with col2:
                                         if "adm_moyenne" in knn_metrics:
-                                            st.metric("Admissions moyennes", f"{knn_metrics['adm_moyenne']:.0f}")
+                                            metric_with_info(
+                                                "Admissions moyennes",
+                                                "Moyenne des admissions des jours similaires.",
+                                                f"{knn_metrics['adm_moyenne']:.0f}",
+                                            )
                                             st.caption(f"Écart-type: {knn_metrics['adm_std']:.1f}")
                                     
                                     with col3:
                                         if "adm_min" in knn_metrics and "adm_max" in knn_metrics:
-                                            st.metric("Fourchette admissions", f"{knn_metrics['adm_min']:.0f} - {knn_metrics['adm_max']:.0f}")
+                                            metric_with_info(
+                                                "Fourchette admissions",
+                                                "Min et max des admissions sur les jours similaires.",
+                                                f"{knn_metrics['adm_min']:.0f} - {knn_metrics['adm_max']:.0f}",
+                                            )
                                     
                                     # Top 3 jours les plus similaires
                                     if "top_3_dates" in knn_metrics:
@@ -539,7 +573,11 @@ def show(df, model, model_available):
                 st.success("✅ Prédiction calculée")
                 
                 st.markdown("---")
-                st.subheader("📊 Résultats de la prédiction")
+                render_title(
+                    "📊 Résultats de la prédiction",
+                    "Résultat du modèle avec comparaison à la baseline historique.",
+                    heading="###",
+                )
                 
                 col1, col2, col3, col4 = st.columns(4)
                 
@@ -548,37 +586,41 @@ def show(df, model, model_available):
                     baseline_adm = df[df['jour_semaine'] == day_of_week_fr.get(day_of_week, day_of_week)]['nombre_admissions'].mean()
                     delta_adm = pred_admissions - baseline_adm
                     
-                    st.metric(
+                    metric_with_info(
                         "Admissions",
+                        "Nombre d'admissions prédites pour la date choisie.",
                         f"{pred_admissions:.0f}",
                         delta=f"{delta_adm:+.0f}",
-                        delta_color="inverse"
+                        delta_color="inverse",
                     )
                 
                 with col2:
                     baseline_urg = df[df['jour_semaine'] == day_of_week_fr.get(day_of_week, day_of_week)]['nombre_passages_urgences'].mean()
                     delta_urg = pred_urgences - baseline_urg
                     
-                    st.metric(
+                    metric_with_info(
                         "Passages urgences",
+                        "Estimation basée sur le ratio historique urgences/admissions.",
                         f"{pred_urgences:.0f}",
                         delta=f"{delta_urg:+.0f}",
-                        delta_color="inverse"
+                        delta_color="inverse",
                     )
                 
                 with col3:
-                    st.metric(
+                    metric_with_info(
                         "Hospitalisations",
-                        f"{pred_hospitalisations:.0f}"
+                        "Estimation via un ratio admissions → hospitalisations.",
+                        f"{pred_hospitalisations:.0f}",
                     )
                 
                 with col4:
                     color = "normal" if pred_occupation < 0.85 else "inverse"
-                    st.metric(
+                    metric_with_info(
                         "Taux occupation",
+                        "Taux d'occupation prévu comparé au seuil critique (85%).",
                         f"{pred_occupation*100:.1f}%",
                         delta="Critique" if pred_occupation > 0.85 else "Normal",
-                        delta_color=color
+                        delta_color=color,
                     )
                 
                 # Détails supplémentaires
@@ -587,9 +629,21 @@ def show(df, model, model_available):
                 col1, col2 = st.columns(2)
                 
                 with col1:
-                    st.markdown("#### 🛏️ Besoins en lits")
-                    st.metric("Lits occupés prévus", f"{pred_lits_occupes} / {lits_total}")
-                    st.metric("Lits disponibles", f"{lits_total - pred_lits_occupes}")
+                    render_title(
+                        "🛏️ Besoins en lits",
+                        "Projection basée sur le taux d'occupation estimé.",
+                        heading="####",
+                    )
+                    metric_with_info(
+                        "Lits occupés prévus",
+                        "Lits occupés estimés = lits totaux × taux d'occupation.",
+                        f"{pred_lits_occupes} / {lits_total}",
+                    )
+                    metric_with_info(
+                        "Lits disponibles",
+                        "Lits totaux - lits occupés prévus.",
+                        f"{lits_total - pred_lits_occupes}",
+                    )
                     
                     if pred_occupation > 0.85:
                         st.error(f"⚠️ Risque de saturation ({pred_occupation*100:.1f}%)")
@@ -599,7 +653,11 @@ def show(df, model, model_available):
                         st.success(f"✅ Capacité suffisante ({pred_occupation*100:.1f}%)")
                 
                 with col2:
-                    st.markdown("#### 👥 Besoins en personnel")
+                    render_title(
+                        "👥 Besoins en personnel",
+                        "Estimation basée sur un ratio patients/personnel.",
+                        heading="####",
+                    )
                     
                     # Estimation besoins personnel
                     ratio_patient_staff = 3.5
@@ -611,8 +669,16 @@ def show(df, model, model_available):
                         df['nb_aides_soignants_disponibles'].mean()
                     ))
                     
-                    st.metric("Personnel nécessaire", f"{staff_needed}")
-                    st.metric("Personnel disponible moyen", f"{baseline_staff}")
+                    metric_with_info(
+                        "Personnel nécessaire",
+                        "Lits occupés / ratio patients-personnel.",
+                        f"{staff_needed}",
+                    )
+                    metric_with_info(
+                        "Personnel disponible moyen",
+                        "Moyenne historique des effectifs disponibles.",
+                        f"{baseline_staff}",
+                    )
                     
                     if staff_needed > baseline_staff * 1.1:
                         st.error("⚠️ Renfort nécessaire")
@@ -627,7 +693,11 @@ def show(df, model, model_available):
     # TAB 2: Prédiction Multi-jours
     # ========================================
     with tab2:
-        st.subheader("Prédiction sur plusieurs jours")
+        render_title(
+            "Prédiction sur plusieurs jours",
+            "Projection journalière sur une période choisie.",
+            heading="###",
+        )
         
         col1, col2 = st.columns(2)
         
