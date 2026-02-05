@@ -64,12 +64,16 @@ def _render_kpi_with_ref(label, tooltip, valeur_atteindre, valeur_reference, del
     """Affiche un KPI avec valeur à atteindre et valeur de référence."""
     delta = valeur_atteindre - valeur_reference
     delta_str = f"{delta:+d}" if delta != 0 else "="
+    if delta == 0:
+        delta_color = "off"
+    else:
+        delta_color = "normal" if delta_ok_if_positive else "inverse"
     metric_with_info(
         label,
         tooltip,
         f"{valeur_atteindre}",
         delta=delta,
-        delta_color="normal",
+        delta_color=delta_color,
     )
     st.caption(f"Réf. {valeur_reference} ({delta_str})")
 
