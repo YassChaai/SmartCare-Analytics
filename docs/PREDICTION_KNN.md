@@ -1,4 +1,6 @@
-# Prédiction avec K-NN Temporel et Facteur de Tendance
+# Prédiction avec k-NN Temporel et Facteur de Tendance
+
+**État actuel** : intégré dans la page Prédiction (modèle sélectionnable : Gradient Boosting, Random Forest, Prophet). Le k-NN est utilisé pour les dates éloignées de l’historique, avec tendance ajustable.
 
 ## 🎯 Problème résolu
 

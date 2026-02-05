@@ -1,5 +1,19 @@
 # PROJET DATA
 
+## Résumé opérationnel (mise à jour 2026-02-05)
+
+**Objectif** : simuler et analyser la gestion des ressources hospitalières (Pitié‑Salpêtrière) avec données synthétiques, produire un prototype fonctionnel et des recommandations.
+
+**Livrables clés** :
+- **Prototype fonctionnel** : exploration des flux, simulations (épidémie, grève, afflux), prédiction besoins (lits, personnel), tableau de bord interactif, recommandations automatiques.
+- **Rapport de conception & analyse hospitalière** : dataviz, modèles statistiques, justification des choix.
+- **Rapport stratégique & marketing** : adoption, plan de communication, business model.
+- **Étude d’impact & recommandations** : intégrée à un des livrables.
+
+**Soutenance** : 20 min + Q/R, démo complète du prototype + résultats prédictifs + recommandations.
+
+> Source détaillée : Consignes projet Data-Promo DIGI5-MPJMaj.pdf (docs/).
+
 ## PROMO 2026
 
 

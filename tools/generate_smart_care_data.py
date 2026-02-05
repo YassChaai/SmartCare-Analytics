@@ -482,7 +482,7 @@ class SmartCareDataGenerator:
         # Variation météo
         weather_factor = self._temperature_factor(weather['temperature_moyenne'])
         
-        # Jour de semaine
+        # Jour de semaine2026
         day_of_week = date.weekday()
         if day_of_week == 4:  # Vendredi
             daily_factor = 1.10
@@ -1047,7 +1047,10 @@ class SmartCareDataGenerator:
             print(f"{'='*50}")
             
             start_date = pd.Timestamp(year=year, month=1, day=1)
-            end_date = pd.Timestamp(year=year, month=12, day=31)
+            if year == 2026:
+                end_date = pd.Timestamp(year=year, month=1, day=31)
+            else:
+                end_date = pd.Timestamp(year=year, month=12, day=31)
             
             # Générer les données journalières et météo
             year_data, year_weather = self.generate_daily_data(start_date, end_date, hospital_id)

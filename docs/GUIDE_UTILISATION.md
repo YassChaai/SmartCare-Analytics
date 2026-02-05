@@ -13,24 +13,24 @@ Ce dashboard permet d'analyser l'activité de l'hôpital Pitié-Salpêtrière, d
 ### Méthode 1 : Avec Pipenv (Recommandé)
 
 ```bash
-cd "c:\Users\evan_\Desktop\smart care"
+cd "c:\Users\evan_\Desktop\SCProject\SmartCare-Analytics"
 pipenv shell
-streamlit run app.py
+streamlit run app/app.py
 ```
 
 ### Méthode 2 : Avec l'environnement virtuel
 
 ```bash
-cd "c:\Users\evan_\Desktop\smart care"
+cd "c:\Users\evan_\Desktop\SCProject\SmartCare-Analytics"
 .\.venv\Scripts\activate
-streamlit run app.py
+streamlit run app/app.py
 ```
 
 ### Méthode 3 : Direct avec pipenv
 
 ```bash
-cd "c:\Users\evan_\Desktop\smart care"
-pipenv run streamlit run app.py
+cd "c:\Users\evan_\Desktop\SCProject\SmartCare-Analytics"
+pipenv run streamlit run app/app.py
 ```
 
 **Le dashboard s'ouvre automatiquement dans votre navigateur** à l'adresse : `http://localhost:8501`
@@ -43,7 +43,7 @@ pipenv run streamlit run app.py
 ┌──────────────────────────────────────────────────────────┐
 │  🏥 SMART CARE - Pitié-Salpêtrière                      │
 ├──────────────────────────────────────────────────────────┤
-│ SIDEBAR (gauche)          │  CONTENU PRINCIPAL (droite) │
+│ NAVBAR (haut)             │  CONTENU PRINCIPAL (bas)    │
 │                           │                              │
 │ 🏠 Accueil                │  [Graphiques, KPIs, etc.]   │
 │ 📊 Analyse Exploratoire   │                              │
@@ -53,7 +53,7 @@ pipenv run streamlit run app.py
 └───────────────────────────┴──────────────────────────────┘
 ```
 
-**Navigation** : Cliquez sur une page dans la barre latérale gauche.
+**Navigation** : Cliquez sur un bouton dans la barre de navigation horizontale en haut.
 
 ---
 
@@ -146,7 +146,7 @@ Trois colonnes d'alertes :
 
 **Objectif** : Explorer les données en profondeur avec filtres et visualisations.
 
-### Barre Latérale : Filtres
+### Zone de Filtres (en haut de page)
 
 ```
 ┌─────────────────────┐
@@ -164,6 +164,7 @@ Trois colonnes d'alertes :
 ```
 
 **Utilisation** : Sélectionnez une plage de dates et/ou une saison pour filtrer toutes les analyses.
+Les filtres sont intégrés dans la page (pas de sidebar).
 
 ### Onglet 1 : Tendances Temporelles
 
@@ -1062,8 +1063,8 @@ FileNotFoundError: Jeu de données - Smart Care - *.csv
 
 **Solution** : Vérifiez que vous êtes dans le bon répertoire :
 ```bash
-cd "c:\Users\evan_\Desktop\smart care"
-ls  # Doit afficher le fichier CSV
+cd "c:\Users\evan_\Desktop\SCProject\SmartCare-Analytics"
+ls  # Doit afficher data/raw/
 ```
 
 ### Le Modèle ML n'est Pas Détecté
@@ -1071,8 +1072,8 @@ ls  # Doit afficher le fichier CSV
 **Symptôme** : "⚠️ Modèle ML non disponible" affiché
 
 **Solution** :
-1. Vérifiez que `model_prediction.pkl` est à la racine du projet
-2. Dans l'onglet "Upload Modèle ML", cliquez sur "🔄 Recharger l'application"
+1. Vérifiez la présence des artefacts dans `ML/artifacts/` (ex. `gradient_boosting.joblib`, `feature_columns.json`, `metrics.json`)
+2. Dans l'onglet "Uploader Modèle ML", cliquez sur "🔄 Recharger l'application"
 
 ### Graphiques ne S'affichent Pas
 

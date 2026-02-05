@@ -1,24 +1,28 @@
 # 🏗️ Architecture de l'Application Smart Care
 
-## 📁 Structure du Projet
+## 📁 Structure du Projet (actuelle)
 
 ```
-smart care/
-├── app.py                          # 🏠 Application principale avec navigation
-├── pages/                          # 📄 Modules des pages
-│   ├── __init__.py                 # Initialisation du package
-│   ├── simulation.py               # 🎯 Simulations de scénarios
-│   ├── prediction.py               # 🔮 Prédictions ML
-│   └── recommandations.py          # 💡 Recommandations automatiques
-├── docs/                           # 📚 Documentation
-│   ├── GUIDE_STREAMLIT.md          # Guide Streamlit
-│   ├── ARCHITECTURE.md             # Ce fichier
-│   └── GUIDE_UTILISATION.md        # Guide utilisateur
-├── Jeu de données - Smart Care - *.csv  # 📊 Données
-├── model_prediction.pkl            # 🤖 Modèle ML (à créer)
-├── Pipfile                         # 📦 Dépendances
-├── Pipfile.lock                    # 🔒 Versions exactes
-└── README.md                       # 📖 Documentation principale
+SmartCare-Analytics/
+├── app/
+│   ├── app.py                  # 🏠 Entrée Streamlit + navigation horizontale
+│   ├── pages/                  # 📄 Modules des pages
+│   │   ├── simulation.py        # 🎯 Simulations de scénarios
+│   │   ├── prediction.py        # 🔮 Prédictions (ML + Prophet + stats)
+│   │   ├── recommandations.py   # 💡 Recommandations
+│   │   ├── prediction_store.py  # 🗃️ Stockage des prédictions
+│   │   └── ui_helpers.py        # 🧩 Composants UI
+│   └── backup/
+├── ML/
+│   ├── artifacts/               # 🤖 Modèles + métriques + features
+│   └── smartcare_model/         # ⚙️ Pipeline ML
+├── data/
+│   ├── raw/                     # 📊 Données CSV sources
+│   └── last_prediction_for_recommendations.json
+├── docs/                         # 📚 Documentation
+├── tools/                        # 🛠️ Scripts utilitaires
+├── requirements.txt / Pipfile / pyproject.toml
+└── README.md
 ```
 
 ## 🎯 Flux de Données
@@ -62,7 +66,7 @@ smart care/
 
 ### 1. app.py (Application Principale) 🏠
 
-**Rôle** : Point d'entrée de l'application, gère la navigation et contient 2 pages intégrées.
+**Rôle** : Point d'entrée de l'application, charge les données et gère la navigation horizontale vers les pages.
 
 **Sections principales** :
 
@@ -87,20 +91,12 @@ if 'df' not in st.session_state:
     st.session_state.df = load_data()
 
 # 5. NAVIGATION
-page = st.navigation([
-    st.Page(...),  # Définition des pages
-])
+# Barre horizontale + boutons
+# Déclenche la page active via st.session_state
 
-# 6. PAGE ACCUEIL
-if selected_page == "🏠 Accueil":
-    # KPIs
-    # Graphiques de synthèse
-    # Alertes
-
-# 7. PAGE ANALYSE EXPLORATOIRE
-elif selected_page == "📊 Analyse Exploratoire":
-    # Filtres
-    # 4 Onglets d'analyse
+# 6. RENDU DES PAGES
+# Accueil + Analyse intégrées
+# Simulation / Prédiction / Recommandations via modules pages/*
 ```
 
 **Fonctions clés** :
