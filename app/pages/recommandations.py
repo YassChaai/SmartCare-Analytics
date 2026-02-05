@@ -68,8 +68,10 @@ def _render_kpi_with_ref(label, tooltip, valeur_atteindre, valeur_reference, del
         label,
         tooltip,
         f"{valeur_atteindre}",
-        delta=f"Réf. {valeur_reference} ({delta_str})",
+        delta=delta,
+        delta_color="normal",
     )
+    st.caption(f"Réf. {valeur_reference} ({delta_str})")
 
 
 def _render_single_day(df, pred_data):

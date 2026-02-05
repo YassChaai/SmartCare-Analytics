@@ -937,7 +937,6 @@ def show(df, model, model_available):
                             'urgences': pred_urg,
                             'occupation': pred_occ
                         })
-                    _log(f"Statistique OK: {len(predictions)} prédictions (predict_with_stats)")
                 
                 pred_df = pd.DataFrame(predictions)
                 
