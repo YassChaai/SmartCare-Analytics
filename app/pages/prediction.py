@@ -109,7 +109,7 @@ def show(df, model, model_available):
     if metrics_data and metrics_key in metrics_data:
         with st.expander("📊 Performance du modèle et limites", expanded=False):
             m = metrics_data[metrics_key]
-            col1, col2, col3 = st.columns(3)
+            col1, col2, col3, col4 = st.columns(4)
             with col1:
                 metric_with_info(
                     "MAE (test)",
@@ -118,14 +118,20 @@ def show(df, model, model_available):
                 )
             with col2:
                 metric_with_info(
-                    "MAPE (test)",
-                    "Erreur absolue moyenne en pourcentage sur l'ensemble de test.",
-                    f"{m.get('mape', 0):.1f} %",
+                    "RMSE (test)",
+                    "Erreur quadratique moyenne (sensibilité aux grosses erreurs).",
+                    f"{m.get('rmse', 0):.1f}",
                 )
             with col3:
                 metric_with_info(
+                    "MAPE (test)",
+                    "Erreur moyenne en pourcentage (sur l'ensemble de test).",
+                    f"{m.get('mape', 0):.1f} %",
+                )
+            with col4:
+                metric_with_info(
                     "SMAPE (test)",
-                    "Erreur symétrique moyenne en pourcentage sur l'ensemble de test.",
+                    "Erreur symétrique en pourcentage (pénalise moins les extrêmes).",
                     f"{m.get('smape', 0):.1f} %",
                 )
             st.caption(

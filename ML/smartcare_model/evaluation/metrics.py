@@ -3,7 +3,7 @@
 from typing import Dict
 
 import numpy as np
-from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 
 def mape(y_true, y_pred) -> float:
@@ -51,10 +51,11 @@ def evaluate(y_true, y_pred) -> Dict[str, float]:
         y_pred: Valeurs predites.
 
     Returns:
-        Dictionnaire contenant MAE, MAPE et sMAPE.
+        Dictionnaire contenant MAE, RMSE, MAPE et sMAPE.
     """
     return {
         "mae": mean_absolute_error(y_true, y_pred),
+        "rmse": float(np.sqrt(mean_squared_error(y_true, y_pred))),
         "mape": mape(y_true, y_pred),
         "smape": smape(y_true, y_pred),
     }
