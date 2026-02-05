@@ -9,6 +9,8 @@ import plotly.express as px
 from datetime import datetime, timedelta
 import numpy as np
 
+from pages.ui_helpers import metric_with_info, render_title
+
 def show(df):
     """Affiche la page de simulation de scénarios"""
     
@@ -105,7 +107,11 @@ def show(df):
         st.session_state.bed_pressure = preset["lits"][2]
 
     with col1:
-        st.subheader("⚙️ Configuration du scénario")
+        render_title(
+            "⚙️ Configuration du scénario",
+            "Choisissez le type de scénario, la date de début, la durée et l'intensité.",
+            heading="###",
+        )
         
         scenario_type = st.selectbox(
             "Type de scénario",
@@ -151,7 +157,11 @@ def show(df):
         )
     
     with col2:
-        st.subheader("📊 Paramètres d'impact")
+        render_title(
+            "📊 Paramètres d'impact",
+            "Paramètres qui modulent admissions, urgences, personnel et lits.",
+            heading="###",
+        )
         
         # Paramètres selon le type de scénario
         preset = scenario_presets.get(scenario_type, scenario_presets["🎯 Personnalisé"])
@@ -537,50 +547,62 @@ def show(df):
             st.success("✅ Simulation terminée")
             
             st.markdown("---")
-            st.subheader("📈 Résultats de la simulation")
+            render_title(
+                "📈 Résultats de la simulation",
+                "Comparaison entre la situation récente (baseline) et le scénario simulé.",
+                heading="###",
+            )
             
             # Métriques comparatives
             col1, col2, col3, col4 = st.columns(4)
             
             with col1:
                 delta_adm = sim_admissions - baseline_admissions
-                st.metric(
+                metric_with_info(
                     "Admissions/jour",
+                    "Baseline = moyenne des 30 derniers jours. Scénario = baseline × (1 + % admissions).",
                     f"{sim_admissions:.0f}",
                     delta=f"{delta_adm:+.0f} ({admission_increase:+.0f}%)",
-                    delta_color="inverse"
+                    delta_color="inverse",
                 )
             
             with col2:
                 delta_urg = sim_urgences - baseline_urgences
-                st.metric(
+                metric_with_info(
                     "Passages urgences/jour",
+                    "Baseline = moyenne des 30 derniers jours. Scénario = baseline × (1 + % urgences).",
                     f"{sim_urgences:.0f}",
                     delta=f"{delta_urg:+.0f} ({urgence_increase:+.0f}%)",
-                    delta_color="inverse"
+                    delta_color="inverse",
                 )
             
             with col3:
                 delta_occ = (sim_occupation - baseline_occupation) * 100
-                st.metric(
+                metric_with_info(
                     "Taux occupation lits",
+                    "Baseline = moyenne des 30 derniers jours. Scénario = baseline × (1 + % pression lits).",
                     f"{sim_occupation*100:.1f}%",
                     delta=f"{delta_occ:+.1f}%",
-                    delta_color="inverse"
+                    delta_color="inverse",
                 )
             
             with col4:
                 delta_staff = (sim_staff - baseline_staff) * 100
-                st.metric(
+                metric_with_info(
                     "Couverture personnel",
+                    "Baseline = moyenne des 30 derniers jours. Scénario = baseline × (1 - % réduction personnel).",
                     f"{sim_staff*100:.1f}%",
                     delta=f"{delta_staff:+.1f}%",
-                    delta_color="normal"
+                    delta_color="normal",
                 )
             
             # Graphique de projection
             st.markdown("---")
-            st.subheader("📊 Projection sur la période")
+            render_title(
+                "📊 Projection sur la période",
+                "Projection journalière avec montée/descente progressive selon l'intensité.",
+                heading="###",
+            )
             
             # Créer des données de projection
             dates = pd.date_range(start=start_date, periods=duration, freq='D')

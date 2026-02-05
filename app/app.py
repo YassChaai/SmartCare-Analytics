@@ -13,6 +13,8 @@ import os
 from pathlib import Path
 import sys
 
+from pages.ui_helpers import metric_with_info, render_title
+
 # Ajouter la racine du projet pour importer app.prediction_store
 _project_root = Path(__file__).resolve().parent.parent
 if str(_project_root) not in sys.path:
@@ -716,34 +718,38 @@ if page == "Accueil":
     
     with col1:
         avg_occupation = df['taux_occupation_lits'].mean() * 100
-        st.metric(
+        metric_with_info(
             "Occupation Moyenne",
+            "Moyenne du taux d'occupation des lits sur toute la période. Delta = différence entre les 7 derniers jours et la semaine précédente.",
             f"{avg_occupation:.1f}%",
-            delta=f"{(df['taux_occupation_lits'].iloc[-7:].mean() - df['taux_occupation_lits'].iloc[-14:-7].mean()) * 100:.1f}%"
+            delta=f"{(df['taux_occupation_lits'].iloc[-7:].mean() - df['taux_occupation_lits'].iloc[-14:-7].mean()) * 100:.1f}%",
         )
     
     with col2:
         avg_admissions = df['nombre_admissions'].mean()
-        st.metric(
+        metric_with_info(
             "Admissions/Jour",
+            "Moyenne des admissions quotidiennes sur toute la période. Delta = évolution semaine N vs N-1.",
             f"{avg_admissions:.0f}",
-            delta=f"{df['nombre_admissions'].iloc[-7:].mean() - df['nombre_admissions'].iloc[-14:-7].mean():.0f}"
+            delta=f"{df['nombre_admissions'].iloc[-7:].mean() - df['nombre_admissions'].iloc[-14:-7].mean():.0f}",
         )
     
     with col3:
         avg_urgences = df['nombre_passages_urgences'].mean()
-        st.metric(
+        metric_with_info(
             "Urgences/Jour",
+            "Moyenne des passages aux urgences par jour. Delta = évolution semaine N vs N-1.",
             f"{avg_urgences:.0f}",
-            delta=f"{df['nombre_passages_urgences'].iloc[-7:].mean() - df['nombre_passages_urgences'].iloc[-14:-7].mean():.0f}"
+            delta=f"{df['nombre_passages_urgences'].iloc[-7:].mean() - df['nombre_passages_urgences'].iloc[-14:-7].mean():.0f}",
         )
     
     with col4:
         avg_personnel = df['taux_couverture_personnel'].mean() * 100
-        st.metric(
+        metric_with_info(
             "Couverture Personnel",
+            "Moyenne du taux de couverture du personnel. Delta = évolution semaine N vs N-1.",
             f"{avg_personnel:.1f}%",
-            delta=f"{(df['taux_couverture_personnel'].iloc[-7:].mean() - df['taux_couverture_personnel'].iloc[-14:-7].mean()) * 100:.1f}%"
+            delta=f"{(df['taux_couverture_personnel'].iloc[-7:].mean() - df['taux_couverture_personnel'].iloc[-14:-7].mean()) * 100:.1f}%",
         )
     
     st.markdown("---")
@@ -753,7 +759,11 @@ if page == "Accueil":
     
     with col1:
         data_years = f"{df['date'].min().year}–{df['date'].max().year}"
-        st.subheader(f"📈 Évolution des admissions ({data_years})")
+        render_title(
+            f"📈 Évolution des admissions ({data_years})",
+            "Somme mensuelle des admissions et des passages aux urgences.",
+            heading="###",
+        )
         df_monthly = df.groupby(df['date'].dt.to_period('M')).agg({
             'nombre_admissions': 'sum',
             'nombre_passages_urgences': 'sum'
@@ -788,7 +798,11 @@ if page == "Accueil":
         st.plotly_chart(fig, width="stretch")
     
     with col2:
-        st.subheader("🛏️ Taux d'occupation des lits")
+        render_title(
+            "🛏️ Taux d'occupation des lits",
+            "Moyenne mensuelle du taux d'occupation des lits (en %).",
+            heading="###",
+        )
         df['occupation_pct'] = df['taux_occupation_lits'] * 100
         # Agrégation mensuelle pour une meilleure lisibilité
         df_monthly_occupation = df.groupby(df['date'].dt.to_period('M')).agg({
@@ -925,7 +939,11 @@ elif page == "Analyse":
     ])
     
     with tab1:
-        st.subheader("Évolution des indicateurs clés")
+        render_title(
+            "Évolution des indicateurs clés",
+            "Série temporelle de l'indicateur sélectionné.",
+            heading="###",
+        )
         
         metric = st.selectbox(
             "Sélectionnez un indicateur",
@@ -966,7 +984,11 @@ elif page == "Analyse":
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("#### 📅 Variation par jour de semaine")
+            render_title(
+                "📅 Variation par jour de semaine",
+                "Moyenne de l'indicateur par jour de la semaine.",
+                heading="####",
+            )
             df_dow = df_filtered.groupby('jour_semaine')[metric].mean().reset_index()
             
             jour_order = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
@@ -984,7 +1006,11 @@ elif page == "Analyse":
             st.plotly_chart(fig, width="stretch")
         
         with col2:
-            st.markdown("#### 🌤️ Variation par saison")
+            render_title(
+                "🌤️ Variation par saison",
+                "Moyenne de l'indicateur par saison.",
+                heading="####",
+            )
             df_season = df_filtered.groupby('saison')[metric].mean().reset_index()
             
             fig = px.bar(
@@ -998,7 +1024,11 @@ elif page == "Analyse":
             st.plotly_chart(fig, width="stretch")
     
     with tab2:
-        st.subheader("Matrice de corrélation")
+        render_title(
+            "Matrice de corrélation",
+            "Corrélations entre variables numériques sélectionnées.",
+            heading="###",
+        )
         
         numeric_cols = [
             'nombre_admissions', 'nombre_passages_urgences', 'nombre_hospitalisations',
@@ -1029,7 +1059,11 @@ elif page == "Analyse":
         st.plotly_chart(fig, width="stretch")
         
         # Top corrélations
-        st.markdown("#### 🔗 Top 10 des corrélations")
+        render_title(
+            "🔗 Top 10 des corrélations",
+            "Paires de variables les plus corrélées (en valeur absolue).",
+            heading="####",
+        )
         
         corr_pairs = []
         for i in range(len(corr_matrix.columns)):
@@ -1048,12 +1082,20 @@ elif page == "Analyse":
         st.dataframe(df_corr_display, width="stretch")
     
     with tab3:
-        st.subheader("Impact de la météo sur l'activité hospitalière")
+        render_title(
+            "Impact de la météo sur l'activité hospitalière",
+            "Relations entre météo et admissions/urgences.",
+            heading="###",
+        )
         
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("#### 🌡️ Température vs Admissions")
+            render_title(
+                "🌡️ Température vs Admissions",
+                "Nuage de points température moyenne vs admissions.",
+                heading="####",
+            )
             fig = px.scatter(
                 df_filtered,
                 x='temperature_moyenne',
@@ -1068,7 +1110,11 @@ elif page == "Analyse":
             st.plotly_chart(fig, width="stretch")
         
         with col2:
-            st.markdown("#### ❄️ Conditions météo et urgences")
+            render_title(
+                "❄️ Conditions météo et urgences",
+                "Moyennes par type de météo.",
+                heading="####",
+            )
             df_meteo = df_filtered.groupby('meteo_principale').agg({
                 'nombre_passages_urgences': 'mean',
                 'nombre_admissions': 'mean'
@@ -1085,7 +1131,11 @@ elif page == "Analyse":
             st.plotly_chart(fig, width="stretch")
     
     with tab4:
-        st.subheader("Statistiques descriptives")
+        render_title(
+            "Statistiques descriptives",
+            "Statistiques de base (moyenne, écart-type, etc.).",
+            heading="###",
+        )
         
         # Sélection des colonnes numériques pertinentes
         cols_to_describe = [
@@ -1108,7 +1158,11 @@ elif page == "Analyse":
         st.markdown("---")
         
         # Distribution des variables
-        st.markdown("#### 📊 Distribution d'une variable")
+        render_title(
+            "📊 Distribution d'une variable",
+            "Histogramme et distribution par saison.",
+            heading="####",
+        )
         
         var_to_plot = st.selectbox(
             "Choisir une variable",
