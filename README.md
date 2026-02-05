@@ -1,6 +1,6 @@
 # 🏥 Smart Care Dashboard - Pitié-Salpêtrière
 
-Dashboard interactif pour la gestion et la prédiction des ressources hospitalières.
+Dashboard interactif pour la gestion, la simulation et la prédiction des ressources hospitalières.
 
 ## 📋 Fonctionnalités
 
@@ -33,8 +33,8 @@ Chaque simulation inclut :
 ### 🔮 Prédiction
 - **Prédiction simple** : Une journée spécifique
 - **Prédiction multi-jours** : Jusqu'à 90 jours
-- **Support modèle ML** : Intégration facile du modèle .pkl
-- Intervalles de confiance
+- **Modèles ML** : Gradient Boosting, Random Forest, Prophet
+- **k-NN temporel + tendance** pour dates éloignées
 - Comparaison avec historique
 
 ### 💡 Recommandations Automatiques
@@ -55,7 +55,7 @@ Chaque simulation inclut :
 .venv\Scripts\activate  # Windows
 
 # Installer les packages
-pip install streamlit pandas numpy plotly scikit-learn seaborn openpyxl
+pip install -r requirements.txt
 ```
 
 ## 💻 Utilisation
@@ -63,7 +63,7 @@ pip install streamlit pandas numpy plotly scikit-learn seaborn openpyxl
 ### Lancer le dashboard
 
 ```bash
-streamlit run app.py
+streamlit run app/app.py
 ```
 
 Le dashboard s'ouvrira automatiquement dans votre navigateur à l'adresse : `http://localhost:8501`
@@ -71,36 +71,34 @@ Le dashboard s'ouvrira automatiquement dans votre navigateur à l'adresse : `htt
 ### Structure des fichiers
 
 ```
-smart care/
-├── app.py                          # Application principale
-├── pages/
-│   ├── __init__.py
-│   ├── simulation.py               # Module simulation
-│   ├── prediction.py               # Module prédiction
-│   └── recommandations.py          # Module recommandations
-├── model_prediction.pkl            # Modèle ML (à ajouter)
-├── Jeu de données - Smart Care - daily_hospital_context_2022-2024_generated.csv
+SmartCare-Analytics/
+├── app/
+│   ├── app.py                  # Entrée Streamlit
+│   └── pages/                   # Pages (simulation, prediction, recommandations)
+├── ML/
+│   ├── artifacts/               # Modèles + métriques + features
+│   └── smartcare_model/         # Pipeline ML
+├── data/
+│   └── raw/                     # CSV sources
+├── tools/                       # Scripts (train, generate, predict)
 └── README.md
 ```
 
-## 🤖 Intégration du Modèle ML
+## 🤖 Modèles ML
 
-### Pour votre collègue qui développe le modèle :
+### Entraîner / relancer les modèles
 
-1. **Format du modèle** : Fichier `.pkl` (pickle)
-
-2. **Sauvegarder le modèle** :
-```python
-import pickle
-
-# Après entraînement de votre modèle
-with open('model_prediction.pkl', 'wb') as f:
-    pickle.dump(model, f)
+```bash
+pipenv run python tools/train_poc.py
+pipenv run python tools/train_prophet.py
 ```
 
-3. **Placer le fichier** : Copier `model_prediction.pkl` à la racine du projet
-
-4. **Rechargement** : Le dashboard détectera automatiquement le modèle au démarrage
+Les artefacts sont générés dans `ML/artifacts/` :
+- `gradient_boosting.joblib`
+- `random_forest.joblib`
+- `prophet.joblib`
+- `feature_columns.json`
+- `metrics.json`
 
 ### Features attendues par le modèle :
 
@@ -133,9 +131,9 @@ with open('model_prediction.pkl', 'wb') as f:
 
 ## 📊 Données
 
-Le dashboard utilise le fichier CSV généré contenant :
-- **1098 jours** de données (2022-2024)
-- **27 variables** (temporelles, météo, hospitalières, événements)
+Le dashboard utilise les fichiers CSV générés contenant :
+- **2022–2026 (jusqu’au 31/01/2026)**
+- Variables temporelles, météo, hospitalières, événements
 
 ### Principales variables :
 - Admissions, passages urgences, hospitalisations
@@ -148,7 +146,7 @@ Le dashboard utilise le fichier CSV généré contenant :
 
 ### Modifier les seuils d'alerte
 
-Dans `app.py` :
+Dans [app/app.py](app/app.py) :
 ```python
 # Seuil critique occupation lits
 if current_occupation > 0.85:  # Modifier ici
@@ -159,7 +157,7 @@ if current_staff < 0.85:  # Modifier ici
 
 ### Ajouter un nouveau scénario
 
-Dans `pages/simulation.py`, ajouter dans la liste :
+Dans [app/pages/simulation.py](app/pages/simulation.py), ajouter dans la liste :
 ```python
 scenario_type = st.selectbox(
     "Type de scénario",
@@ -222,7 +220,7 @@ pip install --upgrade streamlit
 - Vérifier le nom du fichier (espaces, caractères spéciaux)
 
 ### Le modèle ML n'est pas détecté
-- Vérifier que `model_prediction.pkl` est à la racine
+- Vérifier les artefacts dans `ML/artifacts/`
 - Cliquer sur "🔄 Recharger l'application" dans l'onglet Upload
 
 ## 📞 Support

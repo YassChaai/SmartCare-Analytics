@@ -31,7 +31,10 @@ def _get_reference_single_day(df, pred_date, day_of_week_fr):
 def _get_reference_multi_day(df, start_date, n_days):
     """Récupère les X jours qui précèdent la date de début de prédiction."""
     start_date = pd.to_datetime(start_date)
-    ref_end = start_date - timedelta(days=1)
+    df = df.copy()
+    df['date'] = pd.to_datetime(df['date'], errors='coerce')
+    last_date = df['date'].max()
+    ref_end = min(start_date - timedelta(days=1), last_date)
     ref_start = ref_end - timedelta(days=n_days - 1)
     ref_df = df[(df['date'] >= ref_start) & (df['date'] <= ref_end)]
     return ref_df
@@ -153,6 +156,8 @@ def _render_multi_day(df, pred_data):
         return
 
     ref_df = ref_df.sort_values('date').reset_index(drop=True)
+    ref_df = ref_df.copy()
+    ref_df['date'] = pd.to_datetime(ref_df['date'], errors='coerce')
     pred_df = pred_df.head(n_days).copy()
     pred_df = pred_df.reset_index(drop=True)
 

@@ -627,7 +627,7 @@ class SmartCareDataGenerator:
             
             # Estimation de l'occupation
             lits_occupes = int(min(
-                total_lits * 0.7 + np.random.normal(0, total_lits * 0.1),
+                total_lits * 0.75 + np.random.normal(0, total_lits * 0.1),
                 total_lits * 0.95
             ))
             taux_occupation = lits_occupes / total_lits
