@@ -130,6 +130,7 @@ Dossier : `ml/artifacts/`
 ## 9. Métriques (pourquoi et comment)
 
 - **MAE** : erreur absolue moyenne (en admissions).
+- **RMSE** : erreur quadratique moyenne (pénalise davantage les grosses erreurs).
 - **MAPE** : erreur relative moyenne en %, lisible métier.
 - **sMAPE** : version symétrique plus robuste quand `y` est faible.
 

@@ -107,12 +107,14 @@ def show(df, model, model_available):
     if metrics_data and metrics_key in metrics_data:
         with st.expander("📊 Performance du modèle et limites", expanded=False):
             m = metrics_data[metrics_key]
-            col1, col2, col3 = st.columns(3)
+            col1, col2, col3, col4 = st.columns(4)
             with col1:
                 st.metric("MAE (test)", f"{m.get('mae', 0):.1f}")
             with col2:
-                st.metric("MAPE (test)", f"{m.get('mape', 0):.1f} %")
+                st.metric("RMSE (test)", f"{m.get('rmse', 0):.1f}")
             with col3:
+                st.metric("MAPE (test)", f"{m.get('mape', 0):.1f} %")
+            with col4:
                 st.metric("SMAPE (test)", f"{m.get('smape', 0):.1f} %")
             st.caption(
                 "Modèle entraîné sur 2022–2024. Pour les dates hors période, la prédiction s'appuie sur la "
