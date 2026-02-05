@@ -1,5 +1,7 @@
 # Audit technique – Prototype, prédiction et recommandations
 
+**Mise à jour** : 5 février 2026 (structure & chemins vérifiés)
+
 **Projet :** Smart Care Analytics – Pitié-Salpêtrière  
 **Périmètre :** Côté technique du livrable (prototype fonctionnel + prédiction + recommandations)  
 **Référence :** Consignes projet DATA – Livrables attendus  
@@ -187,7 +189,7 @@
    Utiliser le modèle ML pour chaque jour de la plage (en réutilisant la dernière ligne de features + overrides météo/événement par jour si besoin), au lieu de rester uniquement sur `predict_with_stats`. Même avec des lags « figés », cela aligne la démo avec « modèle de prédiction utilisé partout ».
 
 2. **Afficher les métriques du modèle dans l’app**  
-   Dans l’onglet Prédiction (ou Upload), afficher MAE/MAPE depuis `metrics.json` et une phrase du type : « Modèle entraîné sur 2022–2024 ; pour les dates hors période, la prédiction s’appuie sur la dernière période connue + contexte météo/événement. »
+   Dans l’onglet Prédiction (ou Upload), afficher MAE/MAPE depuis `metrics.json` et une phrase du type : « Modèle entraîné sur 2022–2026 ; pour les dates hors période, la prédiction s’appuie sur la dernière période connue + contexte météo/événement. »
 
 3. **Une slide « Limites et pistes »**  
    Données jusqu’en 2024 → prédiction 2026 contrainte ; modèle à améliorer (MAPE ~19 %) ; évolution possible : prédiction séquentielle, données 2025, matériel médical.

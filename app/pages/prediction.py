@@ -135,7 +135,7 @@ def show(df, model, model_available):
                     f"{m.get('smape', 0):.1f} %",
                 )
             st.caption(
-                "Modèle entraîné sur 2022–2024. Pour les dates hors période, la prédiction s'appuie sur la "
+                "Modèle entraîné sur 2022–2026. Pour les dates hors période, la prédiction s'appuie sur la "
                 "dernière période connue + contexte météo/événement."
             )
     

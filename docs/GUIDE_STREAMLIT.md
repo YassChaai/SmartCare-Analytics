@@ -1,5 +1,7 @@
 # 🚀 Guide Streamlit pour Débutants
 
+> **ARCHIVÉ (2026-02-05)** : guide générique non spécifique au projet. Référez-vous à GUIDE_UTILISATION.md pour l’usage actuel.
+
 ## Qu'est-ce que Streamlit ?
 
 Streamlit est un framework Python qui permet de créer des **applications web interactives** en quelques lignes de code, sans connaître HTML/CSS/JavaScript.

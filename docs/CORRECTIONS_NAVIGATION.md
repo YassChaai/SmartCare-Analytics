@@ -1,5 +1,7 @@
 # 🔧 Corrections Appliquées - Navigation et Menu
 
+> **ARCHIVÉ (2026-02-05)** : les corrections sont déjà intégrées dans l’application. Ce document est conservé uniquement à titre historique et n’est plus nécessaire pour l’usage courant.
+
 ## ✅ Problèmes Résolus
 
 ### 1. **Pages qui ne s'affichent pas** ❌ → ✅

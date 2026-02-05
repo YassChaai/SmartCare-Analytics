@@ -1,8 +1,8 @@
-# 🎨 Design System - Style Karmine Corp
+# 🎨 Design System - Style Nike
 
 ## 🎯 Philosophie de Design
 
-Le dashboard Smart Care utilise un design inspiré de **Karmine Corp** : moderne, élégant, et orienté gaming/e-sport avec une identité visuelle forte.
+Le dashboard Smart Care utilise un design **Nike-style** : minimaliste, impactant, noir/blanc/orange, avec une hiérarchie typographique forte.
 
 ---
 
@@ -11,34 +11,32 @@ Le dashboard Smart Care utilise un design inspiré de **Karmine Corp** : moderne
 ### Couleurs Principales
 
 ```css
---kc-primary: #2E3FE8      /* Bleu Karmine (principal) */
---kc-secondary: #1a237e    /* Bleu foncé (secondaire) */
---kc-gold: #FFD700         /* Or (accents) */
---kc-light: #f8f9fa        /* Clair (textes) */
---kc-dark: #0a0e27         /* Sombre (fond) */
+--nike-black: #111111       /* Texte principal */
+--nike-white: #FFFFFF       /* Fond */
+--nike-orange: #FF5700      /* Accent */
+--nike-gray: #7E7E7E        /* Texte secondaire */
+--nike-light-gray: #F5F5F5  /* Surfaces */
+--nike-dark-gray: #2F2F2F   /* Bordures */
 ```
 
 ### Gradients Signature
 
 ```css
-/* Gradient principal Bleu → Bleu foncé */
-linear-gradient(135deg, #2E3FE8 0%, #1a237e 100%)
+/* Gradient principal Noir → Gris */
+linear-gradient(135deg, #111111 0%, #2F2F2F 100%)
 
-/* Gradient accent Or → Orange */
-linear-gradient(135deg, #FFD700 0%, #FFA500 100%)
-
-/* Gradient texte (effet chromé) */
-linear-gradient(135deg, #2E3FE8 0%, #FFD700 100%)
+/* Gradient accent Orange */
+linear-gradient(135deg, #FF5700 0%, #FF8C00 100%)
 ```
 
 ### Couleurs d'État
 
 | État | Couleur | Usage |
 |------|---------|-------|
-| 🔴 Critique | `#f44336` | Alertes danger, occupation >85% |
-| 🟠 Attention | `#FFD700` | Avertissements, besoins |
-| 🟢 Normal | `#4caf50` | État sain, confirmations |
-| 🔵 Info | `#2E3FE8` | Informations, données |
+| 🔴 Critique | `#D32F2F` | Alertes danger, occupation >85% |
+| 🟠 Attention | `#FF5700` | Avertissements, besoins |
+| 🟢 Normal | `#388E3C` | État sain, confirmations |
+| 🔵 Info | `#111111` | Informations, données |
 
 ---
 
@@ -48,13 +46,12 @@ linear-gradient(135deg, #2E3FE8 0%, #FFD700 100%)
 
 #### Header Principal (Hero)
 ```css
-font-size: 3.5rem
+font-size: 3rem
 font-weight: 900
-background: linear-gradient(135deg, #2E3FE8 0%, #FFD700 100%)
--webkit-background-clip: text
--webkit-text-fill-color: transparent
-letter-spacing: -2px
-animation: glow 2s ease-in-out infinite alternate
+color: #111111
+letter-spacing: -1px
+text-transform: uppercase
+border-bottom: 4px solid #FF5700
 ```
 
 **Exemple** :
@@ -64,29 +61,28 @@ animation: glow 2s ease-in-out infinite alternate
 
 #### Headers de Section
 ```css
-color: #FFD700
-font-size: 1.5rem
+color: #111111
+font-size: 1.3rem
 font-weight: 700
-letter-spacing: 2px
+letter-spacing: 0.5px
 text-transform: uppercase
 ```
 
 ### 2. Cartes Métriques (KPIs)
 
 ```css
-background: linear-gradient(135deg, rgba(46, 63, 232, 0.1), rgba(26, 35, 126, 0.1))
-backdrop-filter: blur(10px)
-border: 1px solid rgba(46, 63, 232, 0.3)
-border-radius: 15px
-box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3)
-transition: all 0.3s ease
+background: #FFFFFF
+border: 1px solid #E5E5E5
+border-radius: 0
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08)
+transition: all 0.2s ease
 ```
 
 **Effet hover** :
 ```css
-transform: translateY(-5px)
-border-color: #FFD700
-box-shadow: 0 12px 48px rgba(46, 63, 232, 0.4)
+transform: translateY(-4px)
+border-color: #111111
+box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12)
 ```
 
 **Animation shine** : Effet de lumière qui traverse la carte
@@ -95,43 +91,42 @@ box-shadow: 0 12px 48px rgba(46, 63, 232, 0.4)
 
 #### Alerte Danger (Critique)
 ```css
-background: linear-gradient(135deg, rgba(244, 67, 54, 0.15), rgba(229, 57, 53, 0.15))
-border-left: 4px solid #f44336
-animation: pulse 2s infinite
+background: #FFEBEE
+border-left: 4px solid #D32F2F
 ```
 
 #### Alerte Warning (Attention)
 ```css
-background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 152, 0, 0.15))
-border-left: 4px solid #FFD700
+background: #FFF3E0
+border-left: 4px solid #FF5700
 ```
 
 #### Alerte Success (Normal)
 ```css
-background: linear-gradient(135deg, rgba(76, 175, 80, 0.15), rgba(67, 160, 71, 0.15))
-border-left: 4px solid #4caf50
+background: #E8F5E9
+border-left: 4px solid #388E3C
 ```
 
 ### 4. Boutons
 
 #### Style Principal
 ```css
-background: linear-gradient(135deg, #2E3FE8 0%, #1a237e 100%)
-color: white
-border: 2px solid #FFD700
-border-radius: 10px
+background: #111111
+color: #FFFFFF
+border: none
+border-radius: 0
 font-weight: 700
 text-transform: uppercase
-letter-spacing: 1px
-box-shadow: 0 4px 15px rgba(46, 63, 232, 0.4)
+letter-spacing: 1.5px
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15)
 ```
 
 #### Hover Effect
 ```css
-background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%)
-color: #0a0e27
-transform: translateY(-2px)
-box-shadow: 0 6px 25px rgba(255, 215, 0, 0.6)
+background: #FF5700
+color: #FFFFFF
+transform: translateY(-3px)
+box-shadow: 0 4px 16px rgba(255, 87, 0, 0.3)
 ```
 
 ### 5. Badges
@@ -268,24 +263,23 @@ font-family: 'Inter', sans-serif
 
 | Usage | Valeur |
 |-------|--------|
-| Titres principaux | -2px |
-| Headers section | 2px |
-| Boutons/Badges | 1px |
+| Titres principaux | -1px |
+| Headers section | 0.5px |
+| Boutons/Badges | 1.5px |
 
 ---
 
 ## 🌈 Thématique
 
-### Dark Theme (Principal)
+### Light Theme (Principal)
 ```css
-background: linear-gradient(to bottom, #0a0e27 0%, #1a1f3a 100%)
-color: #e0e0e0
+background: #FFFFFF
+color: #111111
 ```
 
-### Sidebar
+### Sidebar (masquée)
 ```css
-background: linear-gradient(180deg, #0a0e27 0%, #1a237e 100%)
-border-right: 2px solid rgba(46, 63, 232, 0.3)
+display: none
 ```
 
 ---
@@ -297,25 +291,23 @@ border-right: 2px solid rgba(46, 63, 232, 0.3)
 [data-testid="stMetricValue"] {
     font-size: 2.5rem
     font-weight: 900
-    background: linear-gradient(135deg, #2E3FE8 0%, #FFD700 100%)
-    -webkit-background-clip: text
-    -webkit-text-fill-color: transparent
+    color: #111111
 }
 ```
 
 ### Sliders
 ```css
 .stSlider [data-baseweb="slider"] {
-    background: linear-gradient(135deg, #2E3FE8 0%, #1a237e 100%)
+    background: linear-gradient(135deg, #111111 0%, #2F2F2F 100%)
 }
 ```
 
 ### Expanders
 ```css
 .streamlit-expanderHeader {
-    background: linear-gradient(135deg, rgba(46, 63, 232, 0.1), rgba(26, 35, 126, 0.1))
-    border: 1px solid rgba(46, 63, 232, 0.3)
-    color: #FFD700
+    background: #F5F5F5
+    border: 1px solid #E5E5E5
+    color: #111111
 }
 ```
 

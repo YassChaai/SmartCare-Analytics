@@ -1,5 +1,7 @@
 # 🔧 Guide de Mise à Jour - Nouvelle Structure
 
+> **ARCHIVÉ (2026-02-05)** : la structure actuelle est décrite dans ARCHITECTURE.md. Ce document est conservé à titre historique.
+
 ## Changements Appliqués
 
 ### ✅ 1. Navigation Horizontale (au lieu de sidebar)
