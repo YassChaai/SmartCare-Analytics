@@ -45,7 +45,7 @@ Chaque simulation inclut :
 ## 🚀 Installation
 
 ### Prérequis
-- Python 3.8+
+- Python 3.12
 - Environnement virtuel activé
 
 ### Installation des dépendances
@@ -89,8 +89,7 @@ SmartCare-Analytics/
 ### Entraîner / relancer les modèles
 
 ```bash
-pipenv run python tools/train_poc.py
-pipenv run python tools/train_prophet.py
+pipenv run python tools/train_poc.py --tune
 ```
 
 Les artefacts sont générés dans `ML/artifacts/` :
@@ -242,7 +241,5 @@ Pour toute question pendant le projet :
 - [ ] Tester sur l'ordinateur de présentation
 
 ---
-
-**Bonne chance pour la soutenance ! 🚀**
 
 Projet réalisé dans le cadre du projet DATA - Promo 2026
